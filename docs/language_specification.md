@@ -19,6 +19,7 @@ Linen is a statically typed, imperative programming language with a clean, reada
 - `-` — Subtraction
 - `/` — Division
 - `*` — Multiplication
+- `%` — Modulo
 - `==` — Equals to
 - `<` — Less than
 - `>` — Greater than
