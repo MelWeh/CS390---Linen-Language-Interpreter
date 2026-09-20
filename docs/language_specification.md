@@ -13,29 +13,30 @@ Linen is a statically typed, imperative programming language with a clean, reada
 ---
 
 ## 3.	Operators and delimiters.
-Operators:
-•	+		Addition
-•	-		Subtraction
-•	/		Division
-•	*		Multiplication
-•	==		Equals to
-•	<		Less than
-•	>		Greater than
-•	<= 	    Less than or equal
-•	>=		Greater than or equal
-•	&&	    AND (Logic)
-•	||		OR
-•	!		NO 
+**Operators:**
+
+- `+` — Addition
+- `-` — Subtraction
+- `/` — Division
+- `*` — Multiplication
+- `==` — Equals to
+- `<` — Less than
+- `>` — Greater than
+- `<=` — Less than or equal
+- `>=` — Greater than or equal
+- `&&` — AND (Logic)
+- `||` — OR
+- `!` — NO
  
-Delimiters:
-•	( )
-•	{ }
-•	[ ]
-•	;
-•	:
-•	,
-•	=
-•	=>
+**Delimiters:**
+- ( )
+- { }
+- [ ]
+- ;
+- :
+- ,
+- =
+- =>
 
 ---
 
