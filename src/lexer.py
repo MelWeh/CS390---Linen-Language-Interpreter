@@ -115,18 +115,6 @@ KEYWORDS = {
 
 
 # ======================================================================
-# SECTION 3: ERROR HANDLING
-# ======================================================================
-
-class LexicalError(Exception):
-    """Raised when the lexer encounters an invalid character or malformed token."""
-    def __init__(self, message: str, line: int, column: int):
-        super().__init__(f"{message} at line {line}, column {column}")
-        self.line = line
-        self.column = column
-
-
-# ======================================================================
 # SECTION 2: LEXER IMPLEMENTATION
 # ======================================================================
 
@@ -312,6 +300,18 @@ class Lexer:
             if tok.type == TokenType.EOF:
                 break
         return tokens
+
+
+# ======================================================================
+# SECTION 3: ERROR HANDLING
+# ======================================================================
+
+class LexicalError(Exception):
+    """Raised when the lexer encounters an invalid character or malformed token."""
+    def __init__(self, message: str, line: int, column: int):
+        super().__init__(f"{message} at line {line}, column {column}")
+        self.line = line
+        self.column = column
 
 
 if __name__ == "__main__":
