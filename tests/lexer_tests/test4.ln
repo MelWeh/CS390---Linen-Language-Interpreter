@@ -1,0 +1,11 @@
+let x: int = 5;
+
+if (x < 10) {
+    print(x);
+} else {
+    print(0);
+}
+
+while (x < 10) {
+    x = x + 1;
+}
