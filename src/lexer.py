@@ -148,9 +148,10 @@ class Lexer:
         while self.current_char() is not None and self.current_char().isspace():
             self.advance()
 
+    # Change: Optimized using index reference window tracking.
     def lex_number(self) -> Token:
         start_line, start_col = self.line, self.col
-        num_str = ""
+        start_pos = self.pos
         has_dot = False
 
         while self.current_char() is not None and (self.current_char().isdigit() or self.current_char() == "."):
@@ -158,33 +159,49 @@ class Lexer:
                 if has_dot:
                     raise LexicalError("Invalid number with multiple dots", self.line, self.col)
                 has_dot = True
-            num_str += self.current_char()
             self.advance()
 
-        literal = float(num_str) if has_dot else int(num_str)
+        num_str = self.source[start_pos:self.pos]
+
+        # Change: Now rejects malformed dangling decimals like "21.".
+        if num_str.endswith("."):
+            raise LexicalError(f"Malformed numeric literal '{num_str}' with trailing decimal", start_line, start_col)
+
+        try:
+            literal = float(num_str) if has_dot else int(num_str)
+        except ValueError:
+            raise LexicalError(f"Malformed numeric literal '{num_str}'", start_line, start_col)
+            
         return Token(TokenType.NUMBER, num_str, start_line, start_col, literal)
 
+    # Change: Optimized using string slicing window positions.
     def lex_identifier_or_keyword(self) -> Token:
         start_line, start_col = self.line, self.col
-        ident = ""
+        start_pos = self.pos
 
         while self.current_char() is not None and (self.current_char().isalnum() or self.current_char() == "_"):
-            ident += self.current_char()
             self.advance()
+
+        ident = self.source[start_pos:self.pos]
 
         if ident in KEYWORDS:
             return Token(KEYWORDS[ident], ident, start_line, start_col)
         return Token(TokenType.IDENTIFIER, ident, start_line, start_col)
 
+    # Change: Optimized to slice directly from file stream indexes.
     def lex_string(self) -> Token:
         start_line, start_col = self.line, self.col
         self.advance()  # skip opening quote
-        s = ""
+        start_pos = self.pos
+        
         while self.current_char() is not None and self.current_char() != '"':
-            s += self.current_char()
             self.advance()
-        if self.current_char() != '"':
+            
+        # Change: Strict condition mapping added to cleanly fail unclosed quotes at EOF.
+        if self.current_char() is None:
             raise LexicalError("Unterminated string literal", start_line, start_col)
+            
+        s = self.source[start_pos:self.pos]
         self.advance()  # skip closing quote
         return Token(TokenType.STRING, s, start_line, start_col, s)
 
@@ -232,6 +249,12 @@ class Lexer:
         if ch == "-" and nxt == ">":
             self.advance(); self.advance()
             return Token(TokenType.ARROW, "->", line, col)
+
+        # Change: Strict fallback assertions for isolated single bitwise operators.
+        if ch == "&":
+            raise LexicalError("Invalid character '&'. Did you mean '&&'?", line, col)
+        if ch == "|":
+            raise LexicalError("Invalid character '|'. Did you mean '||'?", line, col)
 
         # Single-character tokens
         if ch == "+":
@@ -289,45 +312,3 @@ class Lexer:
             self.advance()
             return Token(TokenType.COLON, ":", line, col)
 
-        # Invalid character
-        raise LexicalError(f"Invalid character '{ch}'", line, col)
-
-    def tokenize(self) -> list[Token]:
-        tokens: list[Token] = []
-        while True:
-            tok = self.next_token()
-            tokens.append(tok)
-            if tok.type == TokenType.EOF:
-                break
-        return tokens
-
-
-# ======================================================================
-# SECTION 3: ERROR HANDLING
-# ======================================================================
-
-class LexicalError(Exception):
-    """Raised when the lexer encounters an invalid character or malformed token."""
-    def __init__(self, message: str, line: int, column: int):
-        super().__init__(f"{message} at line {line}, column {column}")
-        self.line = line
-        self.column = column
-
-
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) != 2:
-        print("Usage: python lexer.py <source_file>")
-        sys.exit(1)
-
-    with open(sys.argv[1], "r", encoding="utf-8") as f:
-        src = f.read()
-
-    lexer = Lexer(src)
-    try:
-        for token in lexer.tokenize():
-            print(token)
-    except LexicalError as e:
-        print("LexicalError:", e)
-        sys.exit(1)
