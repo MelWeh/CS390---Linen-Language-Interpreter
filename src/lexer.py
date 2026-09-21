@@ -162,8 +162,10 @@ class Lexer:
             self.advance()
 
     # Change: Optimized using index reference window tracking.
+    # Change: Optimized using index reference window tracking.
     def lex_number(self) -> Token:
         start_line, start_col = self.line, self.col
+        start_pos = self.pos
         start_pos = self.pos
         has_dot = False
 
@@ -188,8 +190,10 @@ class Lexer:
         return Token(TokenType.NUMBER, num_str, start_line, start_col, literal)
 
     # Change: Optimized using string slicing window positions.
+    # Change: Optimized using string slicing window positions.
     def lex_identifier_or_keyword(self) -> Token:
         start_line, start_col = self.line, self.col
+        start_pos = self.pos
         start_pos = self.pos
 
         while self.current_char() is not None and (self.current_char().isalnum() or self.current_char() == "_"):
@@ -197,10 +201,13 @@ class Lexer:
 
         ident = self.source[start_pos:self.pos]
 
+        ident = self.source[start_pos:self.pos]
+
         if ident in KEYWORDS:
             return Token(KEYWORDS[ident], ident, start_line, start_col)
         return Token(TokenType.IDENTIFIER, ident, start_line, start_col)
 
+    # Change: Optimized to slice directly from file stream indexes.
     # Change: Optimized to slice directly from file stream indexes.
     def lex_string(self) -> Token:
         start_line, start_col = self.line, self.col
@@ -262,6 +269,12 @@ class Lexer:
         if ch == "-" and nxt == ">":
             self.advance(); self.advance()
             return Token(TokenType.ARROW, "->", line, col)
+
+        # Change: Strict fallback assertions for isolated single bitwise operators.
+        if ch == "&":
+            raise LexicalError("Invalid character '&'. Did you mean '&&'?", line, col)
+        if ch == "|":
+            raise LexicalError("Invalid character '|'. Did you mean '||'?", line, col)
 
         # Change: Strict fallback assertions for isolated single bitwise operators.
         if ch == "&":
