@@ -5,12 +5,106 @@ Parser that converts tokens from lexer.py into an AST.
 from typing import List
 from lexer import Lexer, Token, TokenType, LexicalError
 
-
 # ======================================================================
 # SECTION 1: AST NODE DEFINITIONS
 # ======================================================================
 
+class ASTNode:
+    """Optional base class for clear typing of tree elements."""
+    pass
 
+class ProgramNode(ASTNode):
+    def __init__(self, stmts):
+        self.stmts = stmts
+    def __repr__(self):
+        return f"ProgramNode({self.stmts})"
+
+class VarDeclNode(ASTNode):
+    def __init__(self, name, ty, value):
+        self.name = name
+        self.ty = ty
+        self.value = value
+    def __repr__(self):
+        return f"VarDeclNode({self.name}, {self.ty}, {self.value})"
+
+class AssignmentNode(ASTNode):
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+    def __repr__(self):
+        return f"AssignmentNode({self.name}, {self.value})"
+
+class PrintNode(ASTNode):
+    def __init__(self, expr):
+        self.expr = expr
+    def __repr__(self):
+        return f"PrintNode({self.expr})"
+
+class IfNode(ASTNode):
+    def __init__(self, cond, then, otherwise):
+        self.cond = cond
+        self.then = then
+        self.otherwise = otherwise
+    def __repr__(self):
+        return f"IfNode({self.cond}, {self.then}, {self.otherwise})"
+
+class WhileNode(ASTNode):
+    def __init__(self, cond, body):
+        self.cond = cond
+        self.body = body
+    def __repr__(self):
+        return f"WhileNode({self.cond}, {self.body})"
+
+class BlockNode(ASTNode):
+    def __init__(self, stmts):
+        self.stmts = stmts
+    def __repr__(self):
+        return f"BlockNode({self.stmts})"
+
+class BinaryOpNode(ASTNode):
+    def __init__(self, left, op_type, right):
+        self.left = left
+        self.op_type = op_type
+        self.right = right
+    def __repr__(self):
+        return f"BinaryOpNode({self.left}, {self.op_type}, {self.right})"
+
+class UnaryOpNode(ASTNode):
+    def __init__(self, op_type, operand):
+        self.op_type = op_type
+        self.operand = operand
+    def __repr__(self):
+        return f"UnaryOpNode({self.op_type}, {self.operand})"
+
+class NumberNode(ASTNode):
+    def __init__(self, value, line, column):
+        self.value = value
+        self.line = line
+        self.column = column
+    def __repr__(self):
+        return f"NumberNode({self.value})"
+
+class StringNode(ASTNode):
+    def __init__(self, value, line, column):
+        self.value = value
+        self.line = line
+        self.column = column
+    def __repr__(self):
+        return f"StringNode({self.value})"
+
+class BooleanNode(ASTNode):
+    def __init__(self, value):
+        self.value = value
+    def __repr__(self):
+        return f"BooleanNode({self.value})"
+
+class VariableNode(ASTNode):
+    def __init__(self, value, line, column):
+        self.value = value
+        self.line = line
+        self.column = column
+    def __repr__(self):
+        return f"VariableNode({self.value})"
 
 # ======================================================================
 # SECTION 2: ERROR HANDLING
@@ -23,9 +117,8 @@ class ParseError(Exception):
         self.column = column
         super().__init__(f"[Syntax Error] line {line}, col {column}: {message}")
 
-
 # ======================================================================
-# SECTION 3: PARSER
+# SECTION 3: PARSER SETUP & RECURSIVE DESCENT LOGIC
 # ======================================================================
 
 # Binary operator precedence, lowest first.
@@ -49,9 +142,9 @@ KEYWORD_OPS = {
 class Parser:
     def __init__(self, tokens: List[Token]):
         self.tokens = tokens
-        self.current = 0
+        self.pos = 0
 
-    # Token helpers
+    # Token navigation helpers
     def cur(self) -> Token:
         return self.tokens[self.pos]
 
@@ -71,34 +164,30 @@ class Parser:
         return False
 
     def expect(self, token_type: TokenType, msg: str = "") -> Token:
-        """ Consumes the next token if it matches one of the given types, otherwise raises a ParseError. """
+        """Consumes the next token if it matches, otherwise raises ParseError."""
         tok = self.cur()
         if tok.type != token_type:
             raise ParseError(msg or f"Expected {token_type.name}, got {tok.type.name}", 
-                              tok.line, tok.column,)
+                              tok.line, tok.column)
         return self.advance()
 
+# --------------- Top-level parsing methods --------------
 
-    # --------------- Top-level parsing methods --------------
-
-    def parse(self):
+    def parse(self) -> ProgramNode:
         stmts = []
         while not self.check(TokenType.EOF):
             stmts.append(self.statement())
+        return ProgramNode(stmts)
 
-        # TODO: return ProgramNode(stmts)
-        raise NotImplementedError("ProgramNode not yet defined")
-
-
-    # ---------------- Statements ----------------
+# ---------------- Statements ----------------
 
     def statement(self):
         t = self.cur().type
-        if t == TokenType.LET:       return self.var_decl()
-        if t == TokenType.PRINT:     return self.print_stmt()
-        if t == TokenType.IF:        return self.if_stmt()
-        if t == TokenType.WHILE:     return self.while_stmt()
-        if t == TokenType.LBRACE:    return self.block()
+        if t == TokenType.LET:        return self.var_decl()
+        if t == TokenType.PRINT:      return self.print_stmt()
+        if t == TokenType.IF:         return self.if_stmt()
+        if t == TokenType.WHILE:      return self.while_stmt()
+        if t == TokenType.LBRACE:     return self.block()
         if t == TokenType.IDENTIFIER: return self.assignment()
 
         tok = self.cur()
@@ -107,7 +196,7 @@ class Parser:
             tok.line, tok.column,
         )
 
-    def var_decl(self):
+    def var_decl(self) -> VarDeclNode:
         self.expect(TokenType.LET)
         name = self.expect(TokenType.IDENTIFIER, "Expected variable name after 'let'")
         self.expect(TokenType.COLON, "Expected ':' after variable name")
@@ -115,59 +204,47 @@ class Parser:
         self.expect(TokenType.ASSIGN, "Expected '=' in variable declaration")
         value = self.expression()
         self.expect(TokenType.SEMICOLON, "Expected ';' after declaration")
+        return VarDeclNode(name.value, ty, value)
 
-        # TODO: return VarDeclNode(name.value, ty, value)
-        raise NotImplementedError
-
-    def assignment(self):
+    def assignment(self) -> AssignmentNode:
         name = self.expect(TokenType.IDENTIFIER)
         self.expect(TokenType.ASSIGN, "Expected '=' in assignment")
         value = self.expression()
         self.expect(TokenType.SEMICOLON, "Expected ';' after assignment")
+        return AssignmentNode(name.value, value)
 
-        # TODO: return AssignmentNode(name.value, value)
-        raise NotImplementedError
-
-    def print_stmt(self):
+    def print_stmt(self) -> PrintNode:
         self.expect(TokenType.PRINT)
         self.expect(TokenType.LPAREN, "Expected '(' after 'print'")
         expr = self.expression()
         self.expect(TokenType.RPAREN, "Expected ')' after print expression")
         self.expect(TokenType.SEMICOLON, "Expected ';' after print")
+        return PrintNode(expr)
 
-        # TODO: return PrintNode(expr)
-        raise NotImplementedError
-
-    def if_stmt(self):
+    def if_stmt(self) -> IfNode:
         self.expect(TokenType.IF)
         self.expect(TokenType.LPAREN, "Expected '(' after 'if'")
         cond = self.expression()
         self.expect(TokenType.RPAREN, "Expected ')' after if condition")
         then = self.block()
         otherwise = self.block() if self.match(TokenType.ELSE) else None
+        return IfNode(cond, then, otherwise)
 
-        # TODO: return IfNode(cond, then, otherwise)
-        raise NotImplementedError
-
-    def while_stmt(self):
+    def while_stmt(self) -> WhileNode:
         self.expect(TokenType.WHILE)
         self.expect(TokenType.LPAREN, "Expected '(' after 'while'")
         cond = self.expression()
         self.expect(TokenType.RPAREN, "Expected ')' after while condition")
         body = self.block()
+        return WhileNode(cond, body)
 
-        # TODO: return WhileNode(cond, body)
-        raise NotImplementedError
-
-    def block(self):
+    def block(self) -> BlockNode:
         self.expect(TokenType.LBRACE, "Expected '{' to start block")
         stmts = []
         while not self.check(TokenType.RBRACE, TokenType.EOF):
             stmts.append(self.statement())
         self.expect(TokenType.RBRACE, "Expected '}' to close block")
-        
-        # TODO: return BlockNode(stmts)
-        raise NotImplementedError
+        return BlockNode(stmts)
 
     def type_name(self) -> str:
         tok = self.cur()
@@ -179,18 +256,14 @@ class Parser:
             tok.line, tok.column,
         )
 
-
-    # ---------------- Expressions ----------------
+# ---------------- Expressions ----------------
 
     def expression(self):
         """Entry point: start at the lowest-precedence level."""
         return self.parse_binary(0)
 
     def parse_binary(self, level: int):
-        """
-        Recursive-descent with a precedence table.
-        """
-
+        """Recursive-descent engine utilizing the PRECEDENCE table."""
         if level >= len(PRECEDENCE):
             return self.parse_primary()
 
@@ -199,40 +272,34 @@ class Parser:
 
         while KEYWORD_OPS.get(self.cur().type, self.cur().type) in ops:
             op_tok = self.advance()
-            right = self.parse_binary(level + 1)
+            # Normalize keyword aliases (like 'and' -> TokenType.AND_OP)
+            normalized_op = KEYWORD_OPS.get(op_tok.type, op_tok.type)
             
-            # TODO: left = BinaryOpNode(left, op_tok.type, right)
-            raise NotImplementedError("BinaryOpNode not yet defined")
+            right = self.parse_binary(level + 1)
+            left = BinaryOpNode(left, normalized_op, right)
 
         return left
 
     def parse_primary(self):
-        """Numbers, strings, booleans, variables, parens, unary ops."""
+        """Numbers, strings, booleans, variables, parens, and unary ops."""
         tok = self.cur()
 
+        # NOTE: If your token objects use .literal instead of .value, flip these names
         if tok.type == TokenType.NUMBER:
             self.advance()
-
-            # TODO: return NumberNode(tok.literal, tok.line, tok.column)
-            raise NotImplementedError("NumberNode not yet defined")
+            return NumberNode(tok.literal, tok.line, tok.column)
 
         if tok.type == TokenType.STRING:
             self.advance()
-
-            # TODO: return StringNode(tok.literal, tok.line, tok.column)
-            raise NotImplementedError("StringNode not yet defined")
+            return StringNode(tok.value, tok.line, tok.column)
 
         if tok.type in (TokenType.TRUE, TokenType.FALSE):
             self.advance()
-
-            # TODO: return BooleanNode(tok.type == TokenType.TRUE)
-            raise NotImplementedError("BooleanNode not yet defined")
+            return BooleanNode(tok.type == TokenType.TRUE)
 
         if tok.type == TokenType.IDENTIFIER:
             self.advance()
-
-            # TODO: return VariableNode(tok.value, tok.line, tok.column)
-            raise NotImplementedError("VariableNode not yet defined")
+            return VariableNode(tok.value, tok.line, tok.column)
 
         if tok.type == TokenType.LPAREN:
             self.advance()
@@ -240,25 +307,23 @@ class Parser:
             self.expect(TokenType.RPAREN, "Expected ')' to close expression")
             return inner
 
-        # Unary: -x, !x, not x
+        # Unary operations: -x, !x, not x
         if tok.type in (TokenType.MINUS, TokenType.NOT_OP, TokenType.NOT):
             self.advance()
+            normalized_op = KEYWORD_OPS.get(tok.type, tok.type)
             operand = self.parse_primary()
-
-            # TODO: return UnaryOpNode(tok.type, operand)
-            raise NotImplementedError("UnaryOpNode not yet defined")
+            return UnaryOpNode(normalized_op, operand)
 
         raise ParseError(
             f"Expected an expression, got {tok.type.name} ({tok.value!r})",
             tok.line, tok.column,
         )
 
-
 # ======================================================================
 # SECTION 4: CONVENIENCE ENTRY POINT
 # ======================================================================
 
-def parse(source: str):
+def parse(source: str) -> ProgramNode:
     """Lex + parse a source string. Raises LexicalError or ParseError."""
     tokens = Lexer(source).tokenize()
     return Parser(tokens).parse()

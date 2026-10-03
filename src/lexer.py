@@ -115,21 +115,16 @@ KEYWORDS = {
 
 
 # ======================================================================
-# SECTION 3: ERROR HANDLING
+# SECTION 2: LEXER IMPLEMENTATION
 # ======================================================================
 
 class LexicalError(Exception):
-    """Raised when the lexer encounters invalid or malformed input."""
+    """Raised when the lexer encounters an invalid token or malformed syntax."""
     def __init__(self, message: str, line: int, column: int):
         self.message = message
         self.line = line
         self.column = column
         super().__init__(f"[Lexical Error] line {line}, col {column}: {message}")
-
-
-# ======================================================================
-# SECTION 2: LEXER IMPLEMENTATION
-# ======================================================================
 
 class Lexer:
     def __init__(self, source: str):
@@ -184,7 +179,7 @@ class Lexer:
             literal = float(num_str) if has_dot else int(num_str)
         except ValueError:
             raise LexicalError(f"Malformed numeric literal '{num_str}'", start_line, start_col)
-
+            
         return Token(TokenType.NUMBER, num_str, start_line, start_col, literal)
 
     # Change: Optimized using string slicing window positions.
@@ -206,14 +201,14 @@ class Lexer:
         start_line, start_col = self.line, self.col
         self.advance()  # skip opening quote
         start_pos = self.pos
-
+        
         while self.current_char() is not None and self.current_char() != '"':
             self.advance()
-
+            
         # Change: Strict condition mapping added to cleanly fail unclosed quotes at EOF.
         if self.current_char() is None:
             raise LexicalError("Unterminated string literal", start_line, start_col)
-
+            
         s = self.source[start_pos:self.pos]
         self.advance()  # skip closing quote
         return Token(TokenType.STRING, s, start_line, start_col, s)
@@ -325,31 +320,12 @@ class Lexer:
             self.advance()
             return Token(TokenType.COLON, ":", line, col)
 
-        # Change: Catch any remaining unknown character (e.g. '@', '#', '$', '?', '~', '^', '\', '`').
-        raise LexicalError(f"Unexpected character {ch!r}", line, col)
-
-    
-    def tokenize(self):
-            """Return the full token stream, terminating with EOF."""
-            tokens = []
-            while True:
-                tok = self.next_token()
-                tokens.append(tok)
-                if tok.type == TokenType.EOF:
-                    return tokens
-
-if __name__ == "__main__":
-    import sys
-    from pathlib import Path
-
-    if len(sys.argv) != 2:
-        print("Usage: python3 lexer.py <source_file>")
-        sys.exit(1)
-
-    source = Path(sys.argv[1]).read_text()
-    try:
-        for tok in Lexer(source).tokenize():
-            print(tok)
-    except LexicalError as e:
-        print(e)
-        sys.exit(1)
+    def tokenize(self) -> list[Token]:
+        """Processes the entire source string and returns a list of discovered tokens."""
+        tokens = []
+        while True:
+            tok = self.next_token()
+            tokens.append(tok)
+            if tok.type == TokenType.EOF:
+                break
+        return tokens
