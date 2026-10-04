@@ -168,7 +168,7 @@ class Parser:
         tok = self.cur()
         if tok.type != token_type:
             raise ParseError(msg or f"Expected {token_type.name}, got {tok.type.name}", 
-                              tok.line, tok.column)
+                            tok.line, tok.column)
         return self.advance()
 
 # --------------- Top-level parsing methods --------------
@@ -274,7 +274,7 @@ class Parser:
             op_tok = self.advance()
             # Normalize keyword aliases (like 'and' -> TokenType.AND_OP)
             normalized_op = KEYWORD_OPS.get(op_tok.type, op_tok.type)
-            
+
             right = self.parse_binary(level + 1)
             left = BinaryOpNode(left, normalized_op, right)
 
@@ -284,40 +284,60 @@ class Parser:
         """Numbers, strings, booleans, variables, parens, and unary ops."""
         tok = self.cur()
 
-        # NOTE: If your token objects use .literal instead of .value, flip these names
+        # Numbers
         if tok.type == TokenType.NUMBER:
             self.advance()
             return NumberNode(tok.literal, tok.line, tok.column)
 
+        # Strings
         if tok.type == TokenType.STRING:
             self.advance()
             return StringNode(tok.value, tok.line, tok.column)
 
+        # Booleans
         if tok.type in (TokenType.TRUE, TokenType.FALSE):
             self.advance()
             return BooleanNode(tok.type == TokenType.TRUE)
 
+        # Identifiers (variables or function calls)
         if tok.type == TokenType.IDENTIFIER:
-            self.advance()
-            return VariableNode(tok.value, tok.line, tok.column)
+            ident = self.advance()
 
+            # Function call: foo(x, y)
+            if self.match(TokenType.LPAREN):
+                args = []
+                if not self.check(TokenType.RPAREN):
+                    args.append(self.expression())
+                    while self.match(TokenType.COMMA):
+                        args.append(self.expression())
+                self.expect(TokenType.RPAREN, "Expected ')' after function call")
+                return FuncCallNode(ident.value, args)
+
+            # Variable reference
+            return VariableNode(ident.value, ident.line, ident.column)
+
+        # Parenthesized expression
         if tok.type == TokenType.LPAREN:
             self.advance()
             inner = self.expression()
             self.expect(TokenType.RPAREN, "Expected ')' to close expression")
             return inner
 
-        # Unary operations: -x, !x, not x
+    # Unary operations: -x, !x, not x
         if tok.type in (TokenType.MINUS, TokenType.NOT_OP, TokenType.NOT):
             self.advance()
             normalized_op = KEYWORD_OPS.get(tok.type, tok.type)
-            operand = self.parse_primary()
+            operand = self.parse_binary(len(PRECEDENCE))
             return UnaryOpNode(normalized_op, operand)
 
+    # Otherwise: error
         raise ParseError(
             f"Expected an expression, got {tok.type.name} ({tok.value!r})",
             tok.line, tok.column,
         )
+
+
+
 
 # ======================================================================
 # SECTION 4: CONVENIENCE ENTRY POINT
