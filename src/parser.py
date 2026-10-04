@@ -34,6 +34,15 @@ class AssignmentNode(ASTNode):
     def __repr__(self):
         return f"AssignmentNode({self.name}, {self.value})"
 
+class FuncCallNode(ASTNode):
+    def __init__(self, name, args, line=None, column=None):
+        self.name = name
+        self.args = args
+        self.line = line
+        self.column = column
+    def __repr__(self):
+        return f"FuncCallNode({self.name}, {self.args})"
+
 class PrintNode(ASTNode):
     def __init__(self, expr):
         self.expr = expr
@@ -105,6 +114,35 @@ class VariableNode(ASTNode):
         self.column = column
     def __repr__(self):
         return f"VariableNode({self.value})"
+
+class FuncDefNode(ASTNode):
+    def __init__(self, name, params, return_type, body):
+        self.name = name
+        self.params = params          # list of (name, type) tuples
+        self.return_type = return_type  # str or None
+        self.body = body
+    def __repr__(self):
+        return f"FuncDefNode({self.name}, {self.params}, -> {self.return_type}, {self.body})"
+
+class ReturnNode(ASTNode):
+    def __init__(self, expr):
+        self.expr = expr
+    def __repr__(self):
+        return f"ReturnNode({self.expr})"
+
+class BreakNode(ASTNode):
+    def __repr__(self): return "BreakNode()"
+
+class ContinueNode(ASTNode):
+    def __repr__(self): return "ContinueNode()"
+
+class ForNode(ASTNode):
+    def __init__(self, var, iterable, body):
+        self.var = var
+        self.iterable = iterable
+        self.body = body
+    def __repr__(self):
+        return f"ForNode({self.var}, {self.iterable}, {self.body})"
 
 # ======================================================================
 # SECTION 2: ERROR HANDLING
@@ -311,7 +349,7 @@ class Parser:
                     while self.match(TokenType.COMMA):
                         args.append(self.expression())
                 self.expect(TokenType.RPAREN, "Expected ')' after function call")
-                return FuncCallNode(ident.value, args)
+                return FuncCallNode(ident.value, args, ident.line, ident.column)
 
             # Variable reference
             return VariableNode(ident.value, ident.line, ident.column)
@@ -323,14 +361,14 @@ class Parser:
             self.expect(TokenType.RPAREN, "Expected ')' to close expression")
             return inner
 
-    # Unary operations: -x, !x, not x
+        # Unary operations: -x, !x, not x
         if tok.type in (TokenType.MINUS, TokenType.NOT_OP, TokenType.NOT):
             self.advance()
             normalized_op = KEYWORD_OPS.get(tok.type, tok.type)
             operand = self.parse_binary(len(PRECEDENCE))
             return UnaryOpNode(normalized_op, operand)
 
-    # Otherwise: error
+        # Otherwise: error
         raise ParseError(
             f"Expected an expression, got {tok.type.name} ({tok.value!r})",
             tok.line, tok.column,
