@@ -1,4 +1,3 @@
-
 '''
 AST Node definitions for the Linen language interpreter.
 '''
