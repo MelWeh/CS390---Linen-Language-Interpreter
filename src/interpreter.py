@@ -185,7 +185,9 @@ class Interpreter:
             if node.op_type == TokenType.SLASH:
                 if right_val == 0:
                     raise RuntimeError_("Division by zero", line, col)
-                return left_val / right_val
+                if isinstance(left_val, int) and isinstance(right_val, int):
+                    return left_val // right_val      # floor division;
+                return left_val / right_val           # float division if either is float
             if node.op_type == TokenType.MODULO: return left_val % right_val
 
             # Comparisons
