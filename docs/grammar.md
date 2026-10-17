@@ -86,19 +86,16 @@ program        ::= statement_list ;
 
 statement_list ::= { statement } ;
 
-statement      ::= var_decl ";"
-                 | assignment ";"
-                 | print_stmt ";"
-                 | if_stmt
-                 | while_stmt
-                 | for_stmt
-                 | func_def
-                 | return_stmt ";"
-                 | break_stmt ";"
-                 | continue_stmt ";"
+statement      ::= var_decl   | assignment
+                 | print_stmt | if_stmt
+                 | while_stmt | for_stmt
+                 | func_def   | return_stmt
+                 | break_stmt | continue_stmt
+                 | block      | call_stmt
                  ;
 
-var_decl       ::= "let" identifier ":" type "=" expression ";" ;
+call_stmt      ::= func_call ";" ;
+var_decl       ::= "let" identifier [ ":" type ] "=" expression ";" ;
 assignment     ::= identifier "=" expression ";" ;
 print_stmt     ::= "print" "(" expression ")" ";" ;
 if_stmt        ::= "if" "(" expression ")" block [ "else" block ] ;
@@ -128,7 +125,7 @@ factor         ::= number
                  | "(" expression ")"
                  ;
 
-func_call      ::= identifier "(" [ expression { "," expression } ] ")"  ";" ;
+func_call      ::= identifier "(" [ expression { "," expression } ] ")" ;
 
 type           ::= "int" | "float" | "bool" | "string" ;
 ```
