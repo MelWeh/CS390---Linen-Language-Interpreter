@@ -126,3 +126,154 @@ If a program contains a syntax error, the parser prints a message and exits with
 [Syntax Error] line 1, col 9: Expected an expression, got SEMICOLON (';')
 ```
 No AST is printed in this case.
+
+---
+
+# Interpreter
+
+### Overview
+
+`interpreter.py` walks the AST produced by `parser.py` and executes the program, printing output to the terminal. It maintains variables in a scoped environment (symbol table), evaluates arithmetic and boolean expressions with correct precedence, executes `if/else`, `while`, `for-in`, and function definitions/calls, and reports runtime errors with line/column information.
+
+The interpreter is reached through `main.py`, which runs the full pipeline: lex → parse → interpret.
+
+### Running the Interpreter
+
+From the directory containing `main.py`, `parser.py`, `lexer.py`, `ast_nodes.py`, `environment.py`, `interpreter.py`, and your `.linen` file, run:
+
+```bash
+py main.py test1.linen
+```
+This executes the program and prints any print(...) output to the terminal. If the program contains a lexical, syntax, or runtime error, the interpreter prints an error message instead and halts.
+
+Linen source files use the .linen extension. The extension is not inspected by the interpreter; main.py reads whatever path is given.
+
+### Environment / Symbol Table
+Variables are stored in an Environment, which is a single lexical scope containing a dictionary of names to values plus a link to its parent scope.
+
+- define(name, value) introduces a new variable in the current scope (used by let and function parameter binding).
+- assign(name, value) updates an existing variable, searching outward through the parent chain (used by =).
+- lookup(name) reads a variable, searching outward.
+
+New scopes are created for every block, every if branch, every loop iteration, and every function call. Lookup walks inner → outer, so a name resolves to the nearest enclosing scope that defines it. Assigning to a name that was never declared raises a runtime error.
+
+### Example - Variables, Arithmetic, and Print
+
+**1. Given a file `test1.linen` containing:**
+
+```linen
+let x: int = 10;
+let y: int = 20;
+let z: int = x + y * 2;
+print(x);
+print(y);
+print(z);
+```
+
+**2. Running (via bash/terminal):**
+
+```bash
+py main.py test1.linen
+```
+
+**3. Produces:**
+
+```
+10
+20
+50
+```
+`y * 2` is evaluated before `x + ...`, so `z` is `10 + 40 = 50`. Each `print(...)` writes one line.
+
+### Example - Functions and Boolean Logic
+
+**1. Given a file test2.linen containing:**
+
+```linen
+func max(a: int, b: int) -> int {
+    if (a > b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
+let x: int = 3;
+let y: int = 7;
+let m: int = max(x, y);
+let isLarge: bool = (m > 5);
+if (isLarge == true) {
+    print(m);
+} else {
+    print(0);
+}
+```
+
+**2. Running (via bash/terminal):**
+
+```bash
+py main.py test2.linen
+```
+
+**3. Produces:**
+
+```
+7
+```
+
+`max(x, y)` is called with `3` and `7` and returns `7`. The boolean `isLarge` is `true`, so `m` is printed.
+
+### Example - While Loop
+**1. Given a file test2.linen containing:**
+
+```linen
+let count: int = 0;
+let limit: int = 5;
+while (count < limit) {
+    print(count);
+    count = count + 1;
+}
+```
+
+**2. Running (via bash/terminal):**
+
+```bash
+py main.py test2.linen
+```
+
+**3. Produces:**
+
+```
+0
+1
+2
+3
+4
+```
+
+The loop runs five times. The loop variable `count` is declared outside the loop and reassigned each iteration, so the condition eventually becomes `false`.
+
+### Example - Runtime Error (Division by Zero)
+
+**1. Given a file `runtime_error.linen` containing:**
+
+```linen
+let x: int = 10;
+let y: int = 0;
+
+print(x / y);
+```
+
+**2. Running (via bash/terminal):**
+
+```bash
+py main.py runtime_error.linen
+```
+
+**3. Produces:**
+
+```
+[Runtime Error] line 4, col 11: Division by zero
+```
+
+The interpreter checks the divisor before performing the division, so execution halts here rather than raising a Python `ZeroDivisionError`. No further statements are executed after the error.
