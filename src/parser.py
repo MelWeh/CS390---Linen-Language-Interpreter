@@ -98,7 +98,13 @@ class Parser:
         if t == TokenType.BREAK:      return self.break_stmt()
         if t == TokenType.CONTINUE:   return self.continue_stmt()
         if t == TokenType.LBRACE:     return self.block()
-        if t == TokenType.IDENTIFIER: return self.assignment()  
+        
+        if t == TokenType.IDENTIFIER:
+            if self.tokens[self.pos + 1].type == TokenType.LPAREN:
+                call = self.parse_primary()  # returns FuncCallNode
+                self.expect(TokenType.SEMICOLON, "Expected ';' after function call")
+                return call
+            return self.assignment() 
 
         tok = self.cur()
         raise ParseError(
