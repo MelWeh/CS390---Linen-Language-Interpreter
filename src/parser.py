@@ -53,6 +53,13 @@ class Parser:
     def cur(self) -> Token:
         return self.tokens[self.pos]
 
+    def peek_type(self, offset: int = 1) -> TokenType:
+        """Look at a token `offset` ahead without consuming. EOF-safe."""
+        idx = self.pos + offset
+        if idx >= len(self.tokens):
+            return TokenType.EOF
+        return self.tokens[idx].type
+
     def advance(self) -> Token:
         tok = self.tokens[self.pos]
         if tok.type != TokenType.EOF:
@@ -100,8 +107,11 @@ class Parser:
         if t == TokenType.LBRACE:     return self.block()
         
         if t == TokenType.IDENTIFIER:
-            if self.tokens[self.pos + 1].type == TokenType.LPAREN:
+            if self.peek_type() == TokenType.LPAREN:
                 call = self.parse_primary()  # returns FuncCallNode
+                if not isinstance(call, FuncCallNode):
+                    tok = self.cur()
+                    raise ParseError("Expected a function call", tok.line, tok.column)
                 self.expect(TokenType.SEMICOLON, "Expected ';' after function call")
                 return call
             return self.assignment() 
