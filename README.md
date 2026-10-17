@@ -159,52 +159,44 @@ New scopes are created for every block, every `if` branch, every loop iteration,
 
 ### Example - Variables, Arithmetic, and Print
 
-**1. Given a file `test1.linen` containing:**
+**1. Given a file `arithmetic.linen` containing:**
 
 ```linen
 let x: int = 10;
-let y: int = 20;
-let z: int = x + y * 2;
-print(x);
-print(y);
-print(z);
+let y: int = 5;
+
+print(x + y);
+print(x - y);
+print(x * y);
+print(x / y);
 ```
 
 **2. Running (via bash/terminal):**
 
 ```bash
-py main.py test1.linen
+py main.py arithmetic.linen
 ```
 
 **3. Produces:**
 
 ```
-10
-20
+15
+5
 50
+2
 ```
-`y * 2` is evaluated before `x + ...`, so `z` is `10 + 40 = 50`. Each `print(...)` writes one line.
 
-### Example - Functions and Boolean Logic
+### Example - If Else Logic
 
-**1. Given a file `test2.linen` containing:**
+**1. Given a file `if_else.linen` containing:**
 
 ```linen
-func max(a: int, b: int) -> int {
-    if (a > b) {
-        return a;
-    } else {
-        return b;
-    }
-}
+let x: int = 10;
 
-let x: int = 3;
-let y: int = 7;
-let m: int = max(x, y);
-let isLarge: bool = (m > 5);
-if (isLarge == true) {
-    print(m);
-} else {
+if (x >= 10) {
+    print(1);
+}
+else {
     print(0);
 }
 ```
@@ -212,46 +204,42 @@ if (isLarge == true) {
 **2. Running (via bash/terminal):**
 
 ```bash
-py main.py test2.linen
+py main.py if_else.linen
 ```
 
 **3. Produces:**
 
 ```
-7
+1
 ```
 
-`max(x, y)` is called with `3` and `7` and returns `7`. The boolean `isLarge` is `true`, so `m` is printed.
-
 ### Example - While Loop
-**1. Given a file `test3.linen` containing:**
+**1. Given a file `while_loop.linen` containing:**
 
 ```linen
-let count: int = 0;
-let limit: int = 5;
-while (count < limit) {
-    print(count);
-    count = count + 1;
+let x: int = 1;
+
+while (x <= 5) {
+    print(x);
+    x = x + 1;
 }
 ```
 
 **2. Running (via bash/terminal):**
 
 ```bash
-py main.py test3.linen
+py main.py while_loop.linen
 ```
 
 **3. Produces:**
 
 ```
-0
 1
 2
 3
 4
+5
 ```
-
-The loop runs five times. The loop variable `count` is declared outside the loop and reassigned each iteration, so the condition eventually becomes `false`.
 
 ### Example - Runtime Error (Division by Zero)
 
