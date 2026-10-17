@@ -4,12 +4,25 @@ from lexer import TokenType
 from parser import (
     ProgramNode, VarDeclNode, AssignmentNode, PrintNode, IfNode, WhileNode,
     BlockNode, BinaryOpNode, UnaryOpNode, NumberNode, StringNode, BooleanNode,
-    VariableNode, ASTNode
+    VariableNode, ASTNode, FuncDefNode, FuncCallNode, ReturnNode, ForNode, 
+    BreakNode, ContinueNode
 )
+
+# Small control-flow signals so return/break/continue can unwind execute().
+class _Return(Exception):
+    def __init__(self, value): self.value = value
+
+class _Break(Exception): pass
+class _Continue(Exception): pass
 
 class Interpreter:
     def __init__(self):
         self.global_env = Environment()
+        # Built-in range function
+        self.global_env.define(
+            "range",
+            lambda *a: list(range(*a)),
+        )
 
     def interpret(self, program: ProgramNode) -> None:
         """Main entry point to execute a parsed program."""
@@ -66,6 +79,36 @@ class Interpreter:
                     break
                 self.execute(node.body, env.child())
 
+        elif isinstance(node, ForNode):
+            iterable = self.evaluate(node.iterable, env)
+            if not isinstance(iterable, (list, str)):
+                line, col = self._get_coords(node.iterable)
+                raise RuntimeError_(f"'for' loop needs a range or string, got {type(iterable).__name__}", line, col)
+            for item in iterable:
+                loop_env = env.child()
+                loop_env.define(node.var, item)
+                try:
+                    self.execute(node.body, loop_env)
+                except _Break:
+                    break
+                except _Continue:
+                    continue
+
+        elif isinstance(node, FuncCallNode):
+            self.evaluate(node, env)
+
+        elif isinstance(node, FuncDefNode):
+            env.define(node.name, (node, env))
+
+        elif isinstance(node, ReturnNode):
+            value = self.evaluate(node.expr, env) if node.expr is not None else None
+            raise _Return(value)
+
+        elif isinstance(node, BreakNode):
+            raise _Break()
+        elif isinstance(node, ContinueNode):
+            raise _Continue()
+
         elif isinstance(node, BlockNode):
             block_env = env.child()
             for stmt in node.stmts:
@@ -87,15 +130,25 @@ class Interpreter:
         elif isinstance(node, VariableNode):
             return env.lookup(node.value, node.line, node.column)
 
+        elif isinstance(node, FuncCallNode):
+            target = env.lookup(node.name, node.line, node.column)
+            args = [self.evaluate(a, env) for a in node.args]
+            if callable(target):
+                # builtin like range()
+                return target(*args)
+            if isinstance(target, tuple) and len(target) == 2:
+                # user-defined: (FuncDefNode, defining_env)
+                defn, closure = target
+                return self._call(defn, closure, args, node)
+            raise RuntimeError_(f"'{node.name}' is not callable", node.line, node.column)
+
         elif isinstance(node, UnaryOpNode):
             operand = self.evaluate(node.operand, env)
             line, col = self._get_coords(node.operand)
-
             if node.op_type == TokenType.MINUS:
                 if not isinstance(operand, (int, float)):
                     raise RuntimeError_("Unary '-' operator requires a numeric value", line, col)
-                return -operand
-                
+                return -operand  
             if node.op_type == TokenType.NOT_OP:
                 if not isinstance(operand, bool):
                     raise RuntimeError_("Unary '!'/'not' operator requires a boolean value", line, col)
@@ -142,6 +195,28 @@ class Interpreter:
             if node.op_type == TokenType.GREATER_EQUAL: return left_val >= right_val
 
         raise RuntimeError_("Unknown expression node mapping")
+
+    # Helper to call a user-defined function
+    def _call(self, defn: FuncDefNode, closure: Environment, args: List[Any], call_node: FuncCallNode) -> Any:
+        if len(args) != len(defn.params):
+            raise RuntimeError_(f"Function '{defn.name}' expects {len(defn.params)} arg(s), got {len(args)}", call_node.line, call_node.column)
+
+        call_env = closure.child()
+        for (pname, ptype), arg in zip(defn.params, args):
+            self._validate_type(ptype, arg, call_node)
+            call_env.define(pname, arg)
+
+        try:
+            for stmt in defn.body.stmts:
+                self.execute(stmt, call_env)
+        except _Return as r:
+            if defn.return_type is not None:
+                self._validate_type(defn.return_type, r.value, call_node)
+            return r.value
+
+        if defn.return_type is not None:
+            raise RuntimeError_(f"Function '{defn.name}' expected a return value", call_node.line, call_node.column)
+        return None
 
     # Helper Utilities
     def _get_coords(self, node: ASTNode) -> tuple[Union[int, None], Union[int, None]]:
