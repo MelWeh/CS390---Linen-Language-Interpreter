@@ -92,8 +92,13 @@ class Parser:
         if t == TokenType.PRINT:      return self.print_stmt()
         if t == TokenType.IF:         return self.if_stmt()
         if t == TokenType.WHILE:      return self.while_stmt()
+        if t == TokenType.FOR:        return self.for_stmt()
+        if t == TokenType.FUNC:       return self.func_def()
+        if t == TokenType.RETURN:     return self.return_stmt()
+        if t == TokenType.BREAK:      return self.break_stmt()
+        if t == TokenType.CONTINUE:   return self.continue_stmt()
         if t == TokenType.LBRACE:     return self.block()
-        if t == TokenType.IDENTIFIER: return self.assignment()
+        if t == TokenType.IDENTIFIER: return self.assignment()  
 
         tok = self.cur()
         raise ParseError(
@@ -142,6 +147,56 @@ class Parser:
         self.expect(TokenType.RPAREN, "Expected ')' after while condition")
         body = self.block()
         return WhileNode(cond, body)
+
+    def for_stmt(self) -> ForNode:
+        self.expect(TokenType.FOR)
+        var = self.expect(TokenType.IDENTIFIER, "Expected loop variable after 'for'")
+        self.expect(TokenType.IN, "Expected 'in' in for loop")
+        iterable = self.expression()
+        body = self.block()
+        return ForNode(var.value, iterable, body)
+
+    def func_def(self) -> FuncDefNode:
+        self.expect(TokenType.FUNC)
+        name = self.expect(TokenType.IDENTIFIER, "Expected function name after 'func'")
+        self.expect(TokenType.LPAREN, "Expected '(' after function name")
+        params = []
+        if not self.check(TokenType.RPAREN):
+            params.append(self.param())
+            while self.match(TokenType.COMMA):
+                params.append(self.param())
+        self.expect(TokenType.RPAREN, "Expected ')' after parameter list")
+
+        return_type = None
+        if self.match(TokenType.ARROW):
+            return_type = self.type_name()
+
+        body = self.block()
+        return FuncDefNode(name.value, params, return_type, body)
+
+    def param(self):
+        name = self.expect(TokenType.IDENTIFIER, "Expected parameter name")
+        self.expect(TokenType.COLON, "Expected ':' after parameter name")
+        ty = self.type_name()
+        return (name.value, ty)
+
+    def return_stmt(self) -> ReturnNode:
+        self.expect(TokenType.RETURN)
+        expr = None
+        if not self.check(TokenType.SEMICOLON):
+            expr = self.expression()
+        self.expect(TokenType.SEMICOLON, "Expected ';' after return")
+        return ReturnNode(expr)
+
+    def break_stmt(self) -> BreakNode:
+        self.expect(TokenType.BREAK)
+        self.expect(TokenType.SEMICOLON, "Expected ';' after break")
+        return BreakNode()
+
+    def continue_stmt(self) -> ContinueNode:
+        self.expect(TokenType.CONTINUE)
+        self.expect(TokenType.SEMICOLON, "Expected ';' after continue")
+        return ContinueNode()
 
     def block(self) -> BlockNode:
         self.expect(TokenType.LBRACE, "Expected '{' to start block")
