@@ -1,0 +1,8 @@
+let x: int = 10;
+
+if (x >= 10) {
+    print(1);
+}
+else {
+    print(0);
+}
