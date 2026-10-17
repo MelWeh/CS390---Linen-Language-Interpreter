@@ -144,18 +144,18 @@ From the directory containing `main.py`, `parser.py`, `lexer.py`, `ast_nodes.py`
 ```bash
 py main.py test1.linen
 ```
-This executes the program and prints any print(...) output to the terminal. If the program contains a lexical, syntax, or runtime error, the interpreter prints an error message instead and halts.
+This executes the program and prints any `print(...)` output to the terminal. If the program contains a lexical, syntax, or runtime error, the interpreter prints an error message instead and halts.
 
-Linen source files use the .linen extension. The extension is not inspected by the interpreter; main.py reads whatever path is given.
+Linen source files use the `.linen` extension. The extension is not inspected by the interpreter; `main.py` reads whatever path is given.
 
 ### Environment / Symbol Table
-Variables are stored in an Environment, which is a single lexical scope containing a dictionary of names to values plus a link to its parent scope.
+Variables are stored in an `Environment`, which is a single lexical scope containing a dictionary of names to values plus a link to its parent scope.
 
-- define(name, value) introduces a new variable in the current scope (used by let and function parameter binding).
-- assign(name, value) updates an existing variable, searching outward through the parent chain (used by =).
-- lookup(name) reads a variable, searching outward.
+- `define(name, value)` introduces a new variable in the current scope (used by `let` and function parameter binding).
+- `assign(name, value)` updates an existing variable, searching outward through the parent chain (used by `=`).
+- `lookup(name)` reads a variable, searching outward.
 
-New scopes are created for every block, every if branch, every loop iteration, and every function call. Lookup walks inner → outer, so a name resolves to the nearest enclosing scope that defines it. Assigning to a name that was never declared raises a runtime error.
+New scopes are created for every block, every `if` branch, every loop iteration, and every function call. Lookup walks inner → outer, so a name resolves to the nearest enclosing scope that defines it. Assigning to a name that was never declared raises a runtime error.
 
 ### Example - Variables, Arithmetic, and Print
 
@@ -187,7 +187,7 @@ py main.py test1.linen
 
 ### Example - Functions and Boolean Logic
 
-**1. Given a file test2.linen containing:**
+**1. Given a file `test2.linen` containing:**
 
 ```linen
 func max(a: int, b: int) -> int {
@@ -224,7 +224,7 @@ py main.py test2.linen
 `max(x, y)` is called with `3` and `7` and returns `7`. The boolean `isLarge` is `true`, so `m` is printed.
 
 ### Example - While Loop
-**1. Given a file test2.linen containing:**
+**1. Given a file `test3.linen` containing:**
 
 ```linen
 let count: int = 0;
@@ -238,7 +238,7 @@ while (count < limit) {
 **2. Running (via bash/terminal):**
 
 ```bash
-py main.py test2.linen
+py main.py test3.linen
 ```
 
 **3. Produces:**
