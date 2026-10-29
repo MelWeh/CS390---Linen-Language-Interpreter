@@ -40,11 +40,11 @@ than to `IDENTIFIER`.
 
 ## 3. Literals
 
-| Token Type      | Matches                                                    | `literal` field  |
-|-----------------|------------------------------------------------------------|------------------|
-| `NUMBER`        | Integer (`10`) or decimal (`3.14`) numeric literal         | `int` or `float` |
-| `STRING`        | Text enclosed in double quotes, e.g. `"Hello"`             | the string value |
-| `IDENTIFIER`    | A name starting with a letter or `_`, followed by letters, digits, or `_` | — |
+| Token Type      | Matches                                                                   | `literal` field  |
+|-----------------|---------------------------------------------------------------------------|------------------|
+| `NUMBER`        | Integer (`10`) or decimal (`3.14`) numeric literal                        | `int` or `float` |
+| `STRING`        | Text enclosed in double quotes, e.g. `"Hello"`                            | the string value |
+| `IDENTIFIER`    | A name starting with a letter or `_`, followed by letters, digits, or `_` | —                |
 
 **Note:** integers and floats both emit `NUMBER`. The parsed value is stored in
 `token.literal` so downstream stages can distinguish `int` from `float`.
@@ -88,7 +88,7 @@ than to `IDENTIFIER`.
 
 | Token Type | Meaning                                          |
 |------------|--------------------------------------------------|
-| `EOF`      | End of input. Always the final token emitted.   |
+| `EOF`      | End of input. Always the final token emitted.    |
 
 ## 7. Reserved Keywords Cannot Be Identifiers
 

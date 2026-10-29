@@ -20,13 +20,13 @@ language. It is the reference for the lexer and parser implementations.
 
 Instead of writing every letter:
 
-```
+```ebnf
 letter ::= "a" | "b" | "c" | ... | "z" | "A" | "B" | ... | "Z" ;
 ```
 
 we use the compact form:
 
-```
+```ebnf
 letter ::= "a" | ... | "z" | "A" | ... | "Z" ;
 ```
 
@@ -53,7 +53,7 @@ boolean        ::= "true" | "false" ;
 
 ### Keywords
 
-```
+```ebnf
 and   or    not   true  false
 let   print if    else  while  for  in  func  return  break  continue
 is
@@ -61,19 +61,19 @@ is
 
 ### Type keywords
 
-```
+```ebnf
 int   float   bool   string
 ```
 
 ### Operators
 
-```
+```ebnf
 +   -   *   /   %   =   ==   !=   <   >   <=   >=   &&   ||   !   ->
 ```
 
 ### Delimiters
 
-```
+```ebnf
 (   )   {   }   [   ]   ,   ;   :
 ```
 

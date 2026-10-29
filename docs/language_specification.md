@@ -1,18 +1,35 @@
-## 1.	Language name & description.
+# Language Specification
+
+## 1. Language name & description
+
 Linen is a statically typed, imperative programming language with a clean, readable syntax inspired by Python and C-style control flow. It supports variables, arithmetic, boolean logic, conditionals, loops, and functions with parameters and return values. Linen emphasizes clarity through explicit types and block-based structure using braces.
 
 ---
 
-## 2.	Keywords
-    ```
-    and     or      not     is          if      else
-    true    false   break   continue    func    return
-    print   let     while   for         in     
-    ```
+## 2. Keywords
+
+- and
+- or
+- not
+- is
+- if
+- else
+- true
+- false
+- break
+- continue
+- func
+- return
+- print
+- let
+- while
+- for
+- in
 
 ---
 
-## 3.	Operators and delimiters.
+## 3. Operators and delimiters
+
 **Operators:**
 
 - `+` — Addition
@@ -28,8 +45,9 @@ Linen is a statically typed, imperative programming language with a clean, reada
 - `&&` — AND (Logic)
 - `||` — OR
 - `!` — NO
- 
+
 **Delimiters:**
+
 - ( )
 - { }
 - [ ]
@@ -41,7 +59,8 @@ Linen is a statically typed, imperative programming language with a clean, reada
 
 ---
 
-## 4. Variable declaration/assignment syntax.
+## 4. Variable declaration/assignment syntax
+
 Linen uses let with explicit types for declarations.
 
 ### Declaration
@@ -58,6 +77,7 @@ let flag: bool = true;
 x = x + 5;
 flag = false;
 ```
+
 ### Type examples
 
 - `int` — integer numbers

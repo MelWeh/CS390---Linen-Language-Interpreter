@@ -3,17 +3,20 @@
 ## Example 1 — Arithmetic Precedence
 
 **Source (`testfile1.ln`):**
-```
+
+```linen
 let x: int = 2 + 3 * 4;
 ```
 
 **AST (`testfile1.out`):**
-```
+
+```linen
 ProgramNode([VarDeclNode(x, int, BinaryOpNode(NumberNode(2), TokenType.PLUS, BinaryOpNode(NumberNode(3), TokenType.STAR, NumberNode(4))))])
 ```
 
 **AST Expanded Tree:**
-```
+
+```linen
 ProgramNode
   VarDeclNode(x, int)
     BinaryOpNode(PLUS)
@@ -31,19 +34,22 @@ confirming that multiplication binds tighter than addition.
 ## Example 2 — Multiple Statements
 
 **Source (`testfile2.ln`):**
-```
+
+```linen
 let x: int = 10;
 x = x + 5;
 print(x);
 ```
 
 **AST (`testfile2.out`):**
-```
+
+```linen
 ProgramNode([VarDeclNode(x, int, NumberNode(10)), AssignmentNode(x, BinaryOpNode(VariableNode(x), TokenType.PLUS, NumberNode(5))), PrintNode(VariableNode(x))])
 ```
 
 **AST Expanded Tree:**
-```
+
+```linen
 ProgramNode
   VarDeclNode(x, int)
     NumberNode(10)
@@ -62,7 +68,8 @@ ProgramNode
 ## Example 3 — If/Else Statements
 
 **Source (`testfile3.ln`):**
-```
+
+```linen
 let x: int = 5;
 if (x > 3) {
     print(x);
@@ -72,12 +79,14 @@ if (x > 3) {
 ```
 
 **AST (`testfile3.out`):**
-```
+
+```linen
 ProgramNode([VarDeclNode(x, int, NumberNode(5)), IfNode(BinaryOpNode(VariableNode(x), TokenType.GREATER, NumberNode(3)), BlockNode([PrintNode(VariableNode(x))]), BlockNode([PrintNode(NumberNode(0))]))])
 ```
 
 **AST Expanded Tree:**
-```
+
+```linen
 ProgramNode
   VarDeclNode(x, int)
     NumberNode(5)
@@ -103,7 +112,8 @@ ProgramNode
 ## Example 4 — While Loop
 
 **Source (`testfile4.ln`):**
-```
+
+```linen
 let i: int = 0;
 while (i < 3) {
     print(i);
@@ -112,13 +122,14 @@ while (i < 3) {
 ```
 
 **AST (`testfile4.out`):**
-```
+
+```linen
 ProgramNode([VarDeclNode(i, int, NumberNode(0)), WhileNode(BinaryOpNode(VariableNode(i), TokenType.LESS, NumberNode(3)), BlockNode([PrintNode(VariableNode(i)), AssignmentNode(i, BinaryOpNode(VariableNode(i), TokenType.PLUS, NumberNode(1)))]))])
 ```
 
-
 **AST Expanded Tree:**
-```
+
+```linen
 ProgramNode
   VarDeclNode(i, int)
     NumberNode(0)
@@ -137,7 +148,6 @@ ProgramNode
             NumberNode(1)
 ```
 
-
 **Interpretation:** `WhileNode` holds the loop condition (`i < 3`) and a `BlockNode`
 containing the two loop-body statements — a `print` and an increment assignment.
 
@@ -146,18 +156,21 @@ containing the two loop-body statements — a `print` and an increment assignmen
 ## Example 5 — Unary Operators
 
 **Source (`testfile5.ln`):**
-```
+
+```linen
 let x: int = -5;
 print(not x);
 ```
 
 **AST (`testfile5.out`):**
-```
+
+```linen
 ProgramNode([VarDeclNode(x, int, UnaryOpNode(TokenType.MINUS, NumberNode(5))), PrintNode(UnaryOpNode(TokenType.NOT_OP, VariableNode(x)))])
 ```
 
 **AST Expanded Tree:**
-```
+
+```linen
 ProgramNode
   VarDeclNode(x, int)
     UnaryOpNode(MINUS)
