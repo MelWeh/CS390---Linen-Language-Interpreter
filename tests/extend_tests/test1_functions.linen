@@ -1,0 +1,18 @@
+func add(a: int, b: int) -> int {
+    return a + b;
+}
+
+func square(x: int) -> int {
+    return x * x;
+}
+
+func greet(name: string) {
+    print("Hello, " + name);
+}
+
+let result: int = add(10, 20);
+print(result);
+
+print(square(result));
+
+greet("Linen");

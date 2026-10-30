@@ -1,0 +1,9 @@
+let x: int = 10;
+
+func test() {
+    let x: int = 20;
+    print(x);
+}
+
+test();
+print(x);

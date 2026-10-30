@@ -1,0 +1,14 @@
+let count: int = 0;
+let total: int = 0;
+
+while (true) {
+    count = count + 1;
+    if (count > 10) {
+        break;
+    }
+    if (count % 2 == 0) {
+        continue;
+    }
+    total = total + count;
+}
+print(total);

@@ -1,0 +1,16 @@
+let sum: int = 0;
+
+for i in range(0, 10) {
+    if (i == 5) {
+        continue;
+    }
+    if (i == 8) {
+        break;
+    }
+    sum = sum + i;
+}
+print(sum);
+
+for ch in "abc" {
+    print(ch);
+}

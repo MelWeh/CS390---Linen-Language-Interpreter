@@ -1,10 +1,14 @@
+"""
+Environment for the Linen interpreter.
+"""
+
 from typing import Any, List, Union
 from environment import Environment, RuntimeError_
 from lexer import TokenType
 from parser import (
     ProgramNode, VarDeclNode, AssignmentNode, PrintNode, IfNode, WhileNode,
     BlockNode, BinaryOpNode, UnaryOpNode, NumberNode, StringNode, BooleanNode,
-    VariableNode, ASTNode, FuncDefNode, FuncCallNode, ReturnNode, ForNode, 
+    VariableNode, ASTNode, FuncDefNode, FuncCallNode, ReturnNode, ForNode,
     BreakNode, ContinueNode
 )
 
@@ -15,6 +19,7 @@ class _Return(Exception):
 class _Break(Exception): pass
 class _Continue(Exception): pass
 
+
 class Interpreter:
     def __init__(self):
         self.global_env = Environment()
@@ -23,12 +28,24 @@ class Interpreter:
             "range",
             lambda *a: list(range(*a)),
         )
+        # input function
+        self.global_env.define(
+            "input",
+            lambda prompt="": input(prompt),
+        )
 
     def interpret(self, program: ProgramNode) -> None:
         """Main entry point to execute a parsed program."""
         try:
             for stmt in program.stmts:
                 self.execute(stmt, self.global_env)
+        # Handle top-level control-flow signals as runtime errors.
+        except _Return:
+            print(RuntimeError_("'return' outside of function"))
+        except _Break:
+            print(RuntimeError_("'break' outside of loop"))
+        except _Continue:
+            print(RuntimeError_("'continue' outside of loop"))
         except RuntimeError_ as e:
             print(e)
 
@@ -40,19 +57,16 @@ class Interpreter:
             env.define(node.name, val)
 
         elif isinstance(node, AssignmentNode):
-            # Try to get position metadata from the value node for error reporting
             line, col = self._get_coords(node.value)
-            
-            # Ensure the variable has been declared first
+
             if not env.exists(node.name):
                 raise RuntimeError_(f"Undefined variable '{node.name}'", line, col)
-                
+
             val = self.evaluate(node.value, env)
             env.assign(node.name, val, line, col)
 
         elif isinstance(node, PrintNode):
             val = self.evaluate(node.expr, env)
-            # Match print format formatting
             if isinstance(val, bool):
                 print(str(val).lower())
             else:
@@ -63,12 +77,13 @@ class Interpreter:
             line, col = self._get_coords(node.cond)
             if not isinstance(cond_val, bool):
                 raise RuntimeError_("Condition in 'if' statement must be a boolean", line, col)
-            
+
             if cond_val:
                 self.execute(node.then, env.child())
             elif node.otherwise:
                 self.execute(node.otherwise, env.child())
 
+        # Handle while loops, catching _Break and _Continue signals.
         elif isinstance(node, WhileNode):
             line, col = self._get_coords(node.cond)
             while True:
@@ -77,7 +92,12 @@ class Interpreter:
                     raise RuntimeError_("Condition in 'while' loop must be a boolean", line, col)
                 if not cond_val:
                     break
-                self.execute(node.body, env.child())
+                try:
+                    self.execute(node.body, env.child())
+                except _Break:
+                    break
+                except _Continue:
+                    continue
 
         elif isinstance(node, ForNode):
             iterable = self.evaluate(node.iterable, env)
@@ -134,7 +154,7 @@ class Interpreter:
             target = env.lookup(node.name, node.line, node.column)
             args = [self.evaluate(a, env) for a in node.args]
             if callable(target):
-                # builtin like range()
+                # builtin like range() / input()
                 return target(*args)
             if isinstance(target, tuple) and len(target) == 2:
                 # user-defined: (FuncDefNode, defining_env)
@@ -146,9 +166,9 @@ class Interpreter:
             operand = self.evaluate(node.operand, env)
             line, col = self._get_coords(node.operand)
             if node.op_type == TokenType.MINUS:
-                if not isinstance(operand, (int, float)):
+                if not isinstance(operand, (int, float)) or isinstance(operand, bool):
                     raise RuntimeError_("Unary '-' operator requires a numeric value", line, col)
-                return -operand  
+                return -operand
             if node.op_type == TokenType.NOT_OP:
                 if not isinstance(operand, bool):
                     raise RuntimeError_("Unary '!'/'not' operator requires a boolean value", line, col)
@@ -164,7 +184,7 @@ class Interpreter:
                 if not isinstance(left_val, bool) or not isinstance(right_val, bool):
                     raise RuntimeError_("Operator '&&' requires boolean operands", line, col)
                 return left_val and right_val
-                
+
             if node.op_type == TokenType.OR_OP:
                 if not isinstance(left_val, bool) or not isinstance(right_val, bool):
                     raise RuntimeError_("Operator '||' requires boolean operands", line, col)
@@ -178,6 +198,10 @@ class Interpreter:
             if type(left_val) != type(right_val) and not (isinstance(left_val, (int, float)) and isinstance(right_val, (int, float))):
                 raise RuntimeError_(f"Invalid operation matching {type(left_val).__name__} and {type(right_val).__name__}", line, col)
 
+            # Guard against using arithmetic operators with boolean values.
+            if isinstance(left_val, bool) or isinstance(right_val, bool):
+                raise RuntimeError_("Arithmetic operators cannot be used with boolean values", line, col)
+
             # Arithmetic
             if node.op_type == TokenType.PLUS:   return left_val + right_val
             if node.op_type == TokenType.MINUS:  return left_val - right_val
@@ -186,9 +210,13 @@ class Interpreter:
                 if right_val == 0:
                     raise RuntimeError_("Division by zero", line, col)
                 if isinstance(left_val, int) and isinstance(right_val, int):
-                    return left_val // right_val      # floor division;
+                    return left_val // right_val      # floor division
                 return left_val / right_val           # float division if either is float
-            if node.op_type == TokenType.MODULO: return left_val % right_val
+            # Guard against modulo by zero, same style as division-by-zero above.
+            if node.op_type == TokenType.MODULO:
+                if right_val == 0:
+                    raise RuntimeError_("Modulo by zero", line, col)
+                return left_val % right_val
 
             # Comparisons
             if node.op_type == TokenType.LESS:          return left_val < right_val
@@ -227,14 +255,20 @@ class Interpreter:
             return node.line, node.column
         if hasattr(node, 'left'):
             return self._get_coords(node.left)
+        # Walk into unary operands to extract coordinates from the operand.
+        if hasattr(node, 'operand'):
+            return self._get_coords(node.operand)
         return None, None
 
     def _validate_type(self, expected_type: str, value: Any, value_node: ASTNode) -> None:
         """Type verification to satisfy the explicit assignment declarations."""
         line, col = self._get_coords(value_node)
         mapping = {"int": int, "float": float, "bool": bool, "string": str}
-        
+
         if expected_type in mapping:
+            # Reject boolean values where other types are expected.
+            if isinstance(value, bool) and expected_type != "bool":
+                raise RuntimeError_(f"Type mismatch: Expected '{expected_type}', got value of type 'bool'", line, col)
             if not isinstance(value, mapping[expected_type]):
                 # Allow promotion of ints to float implicitly if acceptable
                 if expected_type == "float" and isinstance(value, int):

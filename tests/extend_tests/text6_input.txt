@@ -1,0 +1,2 @@
+Enter your name: (name)
+Hello, (name)
