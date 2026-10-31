@@ -95,7 +95,7 @@ statement      ::= var_decl   | assignment
                  ;
 
 call_stmt      ::= func_call ";" ;
-var_decl       ::= "let" identifier [ ":" type ] "=" expression ";" ;
+var_decl       ::= "let" identifier ":" type "=" expression ";" ;
 assignment     ::= identifier "=" expression ";" ;
 print_stmt     ::= "print" "(" expression ")" ";" ;
 if_stmt        ::= "if" "(" expression ")" block [ "else" block ] ;
@@ -104,7 +104,7 @@ for_stmt       ::= "for" identifier "in" expression block ;
 func_def       ::= "func" identifier "(" param_list ")" [ "->" type ] block ;
 param_list     ::= [ param { "," param } ] ;
 param          ::= identifier ":" type ;
-return_stmt    ::= "return" expression ";" ;
+return_stmt    ::= "return" [ expression ] ";" ;
 break_stmt     ::= "break" ";" ;
 continue_stmt  ::= "continue" ";" ;
 block          ::= "{" statement_list "}" ;
@@ -117,6 +117,7 @@ equality       ::= relational { ( "==" | "!=" ) relational } ;
 relational     ::= additive  { ( "<" | ">" | "<=" | ">=" ) additive } ;
 additive       ::= term      { ( "+" | "-" ) term } ;
 term           ::= factor    { ( "*" | "/" | "%" ) factor } ;
+unary          ::= ( "-" | "!" | "not" ) unary | factor ;
 factor         ::= number
                  | boolean
                  | string_literal

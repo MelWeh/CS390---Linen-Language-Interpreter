@@ -44,7 +44,7 @@ Linen is a statically typed, imperative programming language with a clean, reada
 - `>=` — Greater than or equal
 - `&&` — AND (Logic)
 - `||` — OR
-- `!` — NO
+- `!` — NOT
 
 **Delimiters:**
 
@@ -55,7 +55,7 @@ Linen is a statically typed, imperative programming language with a clean, reada
 - :
 - ,
 - =
-- =>
+- ->
 
 ---
 
