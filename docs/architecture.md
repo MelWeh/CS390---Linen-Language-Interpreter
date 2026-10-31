@@ -22,7 +22,7 @@ This prints each token to the terminal, one per line, ending with an EOF token.
 
 ### Example
 
-**1. Given a file test1.ln containing:
+1\. Given a file test1.ln containing:
 
 ```linen
 let x: int = 10;
@@ -30,13 +30,13 @@ let y: float = 3.14;
 let flag: bool = true;
 ```
 
-**2. Running (via bash/terminal):
+2\. Running (via bash/terminal):
 
 ```linen
 py lexer.py test1.ln
 ```
 
-**3. Produces:
+3\. Produces:
 
 ```linen
 Token(LET, 'let', line=1, col=1)
@@ -83,19 +83,19 @@ This prints the AST for the program to the terminal as a single line (because it
 
 ### Example - Arithmetic Precedence
 
-**1. Given a file test1.ln containing:
+1\. Given a file test1.ln containing:
 
 ```linen
 let x: int = 2 + 3 * 4;
 ```
 
-**2. Running (via bash/terminal):
+2\. Running (via bash/terminal):
 
 ```linen
 py parser.py test1.ln
 ```
 
-**3. Produces:
+3\. Produces:
 
 ```linen
 ProgramNode([VarDeclNode(x, int, BinaryOpNode(NumberNode(2), TokenType.PLUS, BinaryOpNode(NumberNode(3), TokenType.STAR, NumberNode(4))))])
@@ -103,7 +103,7 @@ ProgramNode([VarDeclNode(x, int, BinaryOpNode(NumberNode(2), TokenType.PLUS, Bin
 
 The AST shows the * node nested inside the right side of the + node, which confirms that multiplication binds tighter than addition.
 
-1. Expanded View of AST:
+4\. Expanded View of AST:
 
 ```linen
     ProgramNode
@@ -159,7 +159,7 @@ New scopes are created for every block, every if branch, every loop iteration, a
 
 ### Example - Variables, Arithmetic, and Print
 
-**1. Given a file arithmetic.linen containing:
+1\. Given a file arithmetic.linen containing:
 
 ```linen
 let x: int = 10;
@@ -171,13 +171,13 @@ print(x * y);
 print(x / y);
 ```
 
-**2. Running (via bash/terminal):
+2\. Running (via bash/terminal):
 
 ```linen
 py main.py arithmetic.linen
 ```
 
-**3. Produces:
+3\. Produces:
 
 ```linen
 15
@@ -188,7 +188,7 @@ py main.py arithmetic.linen
 
 ### Example - If Else Logic
 
-**1. Given a file if_else.linen containing:
+1\. Given a file if_else.linen containing:
 
 ```linen
 let x: int = 10;
@@ -201,13 +201,13 @@ else {
 }
 ```
 
-**2. Running (via bash/terminal):
+2\. Running (via bash/terminal):
 
 ```linen
 py main.py if_else.linen
 ```
 
-**3. Produces:
+3\. Produces:
 
 ```linen
 1
@@ -215,7 +215,7 @@ py main.py if_else.linen
 
 ### Example - While Loop
 
-**1. Given a file while_loop.linen containing:
+1\. Given a file while_loop.linen containing:
 
 ```linen
 let x: int = 1;
@@ -226,13 +226,13 @@ while (x <= 5) {
 }
 ```
 
-**2. Running (via bash/terminal):
+2\. Running (via bash/terminal):
 
 ```linen
 py main.py while_loop.linen
 ```
 
-**3. Produces:
+3\. Produces:
 
 ```linen
 1
@@ -244,7 +244,7 @@ py main.py while_loop.linen
 
 ### Example - Runtime Error (Division by Zero)
 
-**1. Given a file runtime_error.linen containing:
+1\. Given a file runtime_error.linen containing:
 
 ```linen
 let x: int = 10;
@@ -253,13 +253,13 @@ let y: int = 0;
 print(x / y);
 ```
 
-**2. Running (via bash/terminal):
+2\. Running (via bash/terminal):
 
 ```linen
 py main.py runtime_error.linen
 ```
 
-**3. Produces:
+3\. Produces:
 
 ```linen
 [Runtime Error] line 4, col 11: Division by zero

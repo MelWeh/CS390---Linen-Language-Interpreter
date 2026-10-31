@@ -44,9 +44,9 @@ Group 6's CS 390 Final Project Repository for designing and building a Mini Prog
 
 ### Setup
 
-**1. Clone or download the repository.
-**2. Ensure `python3` (or `py` on Windows) is on your PATH.
-**3. No install step is needed --- all source files are plain Python modules in the same directory.
+1\. Clone or download the repository.
+2\. Ensure `python3` (or `py` on Windows) is on your PATH.
+3\. No install step is needed --- all source files are plain Python modules in the same directory.
 
 ## How to Run the Interpreter
 
@@ -72,7 +72,7 @@ You can also run each stage independently:
 
 ## How to Execute a Sample Program
 
-**1. Create a file named `hello.linen` containing:
+1\. Create a file named `hello.linen` containing:
 
        let x: int = 10;
        let y: int = 20;
@@ -83,11 +83,11 @@ You can also run each stage independently:
 
        print(add(x, y));
 
-**2. Run it:
+2\. Run it:
 
        py main.py hello.linen
 
-**3. Expected output:
+3\. Expected output:
 
        30
 
