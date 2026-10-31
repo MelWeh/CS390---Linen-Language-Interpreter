@@ -1,2 +1,2 @@
-Enter your name: (name)
-Hello, (name)
+Enter your name: Alice
+Hello, Alice

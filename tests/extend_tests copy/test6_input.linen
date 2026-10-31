@@ -1,2 +1,0 @@
-let name: string = input("Enter your name: ");
-print("Hello, " + name);
