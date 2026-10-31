@@ -1,267 +1,136 @@
-# CS390---Linen
+# CS390 --- Linen
 
 Group 6's CS 390 Final Project Repository for designing and building a Mini Programming Language Interpreter.
 
 ---
 
-## Lexer Overview
+## Language Name
 
-`lexer.py` converts Linen source code into a list of `Token` objects printed to the terminal. It handles keywords, identifiers, integer and float literals, string literals, operators, delimiters, and reports lexical errors with line/column information.
+**Linen** --- a statically typed, imperative programming language with a clean, readable syntax inspired by Python and C-style control flow. Linen supports variables, arithmetic, boolean logic, conditionals, loops, functions with typed parameters and return values, strings, and user input. It emphasizes clarity through explicit types and block-based structure using braces.
 
-### Running the Lexer
+## Group Members
 
-From the directory containing `lexer.py` and your `.ln` file, run:
+- Melissa Weitekamp
+- Jacob Hay
+- Hasibur Rahman
+- Ilyas Bouchalkha
 
-```bash
-py lexer.py test1.ln
-```
+## Language Features
 
-This prints each token to the terminal, one per line, ending with an `EOF` token.
+### Core features
 
-### Example
+- **Statically typed variables** --- declared with `let` and an explicit type (`int`, `float`, `bool`, `string`)
+- **Arithmetic** --- `+`, `-`, `*`, `/`, `%` with correct operator precedence
+- **Boolean logic** --- `&&`/`and`, `||`/`or`, `!`/`not`, plus comparisons (`==`, `!=`, `<`, `>`, `<=`, `>=`)
+- **Conditionals** --- `if` / `else`
+- **Loops** --- `while` and `for-in`
+- **Functions** --- typed parameters, optional `->` return type, `return` statements, recursion, and closures
+- **Scope** --- lexical scoping with a parent-chain environment; local and global variables; shadowing via `let`
+- **Print** --- `print(expr);` writes to stdout
 
-**1. Given a file `test1.ln` containing:**
+### Extension features
 
-```linen
-let x: int = 10;
-let y: float = 3.14;
-let flag: bool = true;
-```
+- **Strings** --- string literals in double quotes, `+` concatenation, iteration over a string with `for-in`
+- **`for-in` loops** --- iterate over `range(...)` results and strings
+- **`break` / `continue`** --- early loop exit and skip-to-next-iteration
+- **User input** --- `input(prompt)` reads a line from stdin
+- **Statically typed functions** --- parameter and return types checked at call time
+- **Built-ins** --- `range(...)` and `input(...)` available in the global scope
 
-**2. Running (via bash/terminal):**
+## Installation / Setup Requirements
 
-```bash
-py lexer.py test1.ln
-```
+- **Python 3.10 or later** (uses modern type hints such as `list[Token]` and `tuple[int, None]`)
+- No third-party packages are required --- the interpreter uses only the Python standard library (`sys`, `typing`, `dataclasses`, `enum`, `pathlib`)
 
-**3. Produces:**
+### Setup
 
-```linen
-Token(LET, 'let', line=1, col=1)
-Token(IDENTIFIER, 'x', line=1, col=5)
-Token(COLON, ':', line=1, col=6)
-Token(TYPE_INT, 'int', line=1, col=8)
-Token(ASSIGN, '=', line=1, col=12)
-Token(NUMBER, '10', line=1, col=14)
-Token(SEMICOLON, ';', line=1, col=16)
-Token(LET, 'let', line=2, col=1)
-Token(IDENTIFIER, 'y', line=2, col=5)
-Token(COLON, ':', line=2, col=6)
-Token(TYPE_FLOAT, 'float', line=2, col=8)
-Token(ASSIGN, '=', line=2, col=14)
-Token(NUMBER, '3.14', line=2, col=16)
-Token(SEMICOLON, ';', line=2, col=20)
-Token(LET, 'let', line=3, col=1)
-Token(IDENTIFIER, 'flag', line=3, col=5)
-Token(COLON, ':', line=3, col=6)
-Token(TYPE_BOOL, 'bool', line=3, col=8)
-Token(ASSIGN, '=', line=3, col=13)
-Token(TRUE, 'true', line=3, col=15)
-Token(SEMICOLON, ';', line=3, col=19)
-Token(EOF, '', line=4, col=1)
-```
+**1. Clone or download the repository.
+**2. Ensure `python3` (or `py` on Windows) is on your PATH.
+**3. No install step is needed --- all source files are plain Python modules in the same directory.
 
-Each line shows the token type, the raw text that produced it, and its line/column position in the source file.
+## How to Run the Interpreter
 
----
+The full pipeline (lex -> parse -> interpret) is run through `main.py`:
 
-## Parser Overview
+    py main.py <source_file.linen>
 
-`parser.py` converts the tokens produced by `lexer.py` into an Abstract Syntax Tree (AST), printed to the terminal. It handles variable declarations, assignments, print statements, arithmetic and boolean expressions, parenthesized expressions, `if/else`, and `while` loops. Syntax errors are reported with line/column information.
+On macOS/Linux:
 
-### Running the Parser
+    python3 main.py <source_file.linen>
 
-From the directory containing `parser.py`, `lexer.py`, and your `.ln` file, run:
+The interpreter prints any `print(...)` output to the terminal. If the program contains a lexical, syntax, or runtime error, it prints an error message and halts.
 
-```bash
-py parser.py test1.ln
-```
+You can also run each stage independently:
 
-This prints the AST for the program to the terminal as a single line (because it is a nested tree) starting with ProgramNode(...). If the program contains a syntax or lexical error, the parser prints an error message instead and exits with status 1.
+- Lexer only (prints tokens):
 
-### Example - Arithmetic Precedence
+      py lexer.py <source_file.ln>
 
-**1. Given a file `test1.ln` containing:**
+- Parser only (prints AST):
 
-```linen
-let x: int = 2 + 3 * 4;
-```
+      py parser.py <source_file.ln>
 
-**2. Running (via bash/terminal):**
+## How to Execute a Sample Program
 
-```bash
-py parser.py test1.ln
-```
+**1. Create a file named `hello.linen` containing:
 
-**3. Produces:**
+       let x: int = 10;
+       let y: int = 20;
 
-```linen
-ProgramNode([VarDeclNode(x, int, BinaryOpNode(NumberNode(2), TokenType.PLUS, BinaryOpNode(NumberNode(3), TokenType.STAR, NumberNode(4))))])
-```
+       func add(a: int, b: int) -> int {
+           return a + b;
+       }
 
-The AST shows the `*` node nested inside the right side of the `+` node,
-which confirms that multiplication binds tighter than addition.
+       print(add(x, y));
 
-**4. Expanded View of AST:**
+**2. Run it:
 
-```linen
-ProgramNode
-  VarDeclNode(x, int)
-    BinaryOpNode(PLUS)
-      NumberNode(2)
-      BinaryOpNode(STAR)
-        NumberNode(3)
-        NumberNode(4)
-```
+       py main.py hello.linen
 
-This is a sample view of the `let x: int = 2 + 3 * 4;` AST as an indented tree, instead of a collapsed single line.
+**3. Expected output:
 
-### Example - Syntax Error
+       30
 
-If a program contains a syntax error, the parser prints a message and exits with status 1:
+More sample programs are documented in `docs/architecture.md` (the full language and interpreter reference) and in the `tests/` directory.
 
-```parser
-[Syntax Error] line 1, col 9: Expected an expression, got SEMICOLON (';')
-```
+## Repository Organization
 
-No AST is printed in this case.
-
----
-
-## Interpreter Overview
-
-`interpreter.py` walks the AST produced by `parser.py` and executes the program, printing output to the terminal. It maintains variables in a scoped environment (symbol table), evaluates arithmetic and boolean expressions with correct precedence, executes `if/else`, `while`, `for-in`, and function definitions/calls, and reports runtime errors with line/column information.
-
-The interpreter is reached through `main.py`, which runs the full pipeline: lex → parse → interpret.
-
-### Running the Interpreter
-
-From the directory containing `main.py`, `parser.py`, `lexer.py`, `ast_nodes.py`, `environment.py`, `interpreter.py`, and your `.linen` file, run:
-
-```bash
-py main.py test1.linen
-```
-
-This executes the program and prints any `print(...)` output to the terminal. If the program contains a lexical, syntax, or runtime error, the interpreter prints an error message instead and halts.
-
-Linen source files use the `.linen` extension. The extension is not inspected by the interpreter; `main.py` reads whatever path is given.
-
-### Environment / Symbol Table
-
-Variables are stored in an `Environment`, which is a single lexical scope containing a dictionary of names to values plus a link to its parent scope.
-
-- `define(name, value)` introduces a new variable in the current scope (used by `let` and function parameter binding).
-- `assign(name, value)` updates an existing variable, searching outward through the parent chain (used by `=`).
-- `lookup(name)` reads a variable, searching outward.
-
-New scopes are created for every block, every `if` branch, every loop iteration, and every function call. Lookup walks inner → outer, so a name resolves to the nearest enclosing scope that defines it. Assigning to a name that was never declared raises a runtime error.
-
-### Example - Variables, Arithmetic, and Print
-
-**1. Given a file `arithmetic.linen` containing:**
-
-```linen
-let x: int = 10;
-let y: int = 5;
-
-print(x + y);
-print(x - y);
-print(x * y);
-print(x / y);
-```
-
-**2. Running (via bash/terminal):**
-
-```bash
-py main.py arithmetic.linen
-```
-
-**3. Produces:**
-
-```linen
-15
-5
-50
-2
-```
-
-### Example - If Else Logic
-
-**1. Given a file `if_else.linen` containing:**
-
-```linen
-let x: int = 10;
-
-if (x >= 10) {
-    print(1);
-}
-else {
-    print(0);
-}
-```
-
-**2. Running (via bash/terminal):**
-
-```bash
-py main.py if_else.linen
-```
-
-**3. Produces:**
-
-```linen
-1
-```
-
-### Example - While Loop
-
-**1. Given a file `while_loop.linen` containing:**
-
-```linen
-let x: int = 1;
-
-while (x <= 5) {
-    print(x);
-    x = x + 1;
-}
-```
-
-**2. Running (via bash/terminal):**
-
-```bash
-py main.py while_loop.linen
-```
-
-**3. Produces:**
-
-```linen
-1
-2
-3
-4
-5
-```
-
-### Example - Runtime Error (Division by Zero)
-
-**1. Given a file `runtime_error.linen` containing:**
-
-```linen
-let x: int = 10;
-let y: int = 0;
-
-print(x / y);
-```
-
-**2. Running (via bash/terminal):**
-
-```bash
-py main.py runtime_error.linen
-```
-
-**3. Produces:**
-
-```linen
-[Runtime Error] line 4, col 11: Division by zero
-```
-
-The interpreter checks the divisor before performing the division, so execution halts here rather than raising a Python `ZeroDivisionError`. No further statements are executed after the error.
+    .
+    |-- main.py                         Entry point: lex -> parse -> interpret
+    |-- lexer.py                        Tokenizer (source text -> Token list)
+    |-- parser.py                       Recursive-descent parser (tokens -> AST)
+    |-- ast_nodes.py                    AST node class definitions
+    |-- interpreter.py                  Tree-walking interpreter
+    |-- environment.py                  Scope / symbol table (Environment + RuntimeError_)
+    |
+    |
+    |-- docs/
+    |   |-- architecture.md             Full interpreter architecture and reference
+    |   |-- grammar.md                  Formal BNF/EBNF grammar for Linen
+    |   |-- language_specification.md   High-level language design doc
+    |   |-- AST Examples.md             Examples of AST 
+    |   |-- Linen Token Definitions.md  Token vocabulary reference
+    |
+    |-- tests/
+    |   |-- extend_tests                Test cases for the extension features
+    |   |-- interpreter_tests           Test cases for the interpreter
+    |   |-- lexer_tests                 Test cases for the lexer
+    |   |-- parser_tests                Test cases for the parser
+    |
+    |-- README.md                       This file
+
+### File responsibilities
+
+- **main.py** --- reads the source file, invokes the lexer, parser, and interpreter, and reports errors from any stage.
+- **lexer.py** --- character-by-character scanner producing `Token` objects with line/column info; reports `LexicalError`.
+- **parser.py** --- recursive-descent parser using a precedence table for binary operators; produces the AST; reports `ParseError`.
+- **ast_nodes.py** --- dataclass-like node classes: `ProgramNode`, `VarDeclNode`, `AssignmentNode`, `PrintNode`, `IfNode`, `WhileNode`, `ForNode`, `FuncDefNode`, `FuncCallNode`, `ReturnNode`, `BreakNode`, `ContinueNode`, `BlockNode`, `BinaryOpNode`, `UnaryOpNode`, `NumberNode`, `StringNode`, `BooleanNode`, `VariableNode`.
+- **interpreter.py** --- executes the AST, evaluates expressions, manages scope, handles control flow (`return`/`break`/`continue`) via internal exceptions, and reports `RuntimeError_`.
+- **environment.py** --- the `Environment` class (name -> value map + parent pointer) and the `RuntimeError_` exception type.
+
+## Documentation
+
+- **docs/architecture.md** --- full reference for the lexer, parser, interpreter, scope model, functions, extension features, and test programs.
+- **grammar.md** --- formal BNF/EBNF grammar.
+- **language_specification.md** --- high-level design (keywords, operators, syntax examples, sample programs).
+- **Linen Token Definitions.md** --- token vocabulary (keyword/operator/delimiter -> TokenType).
