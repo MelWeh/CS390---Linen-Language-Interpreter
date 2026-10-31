@@ -1,11 +1,10 @@
 # CS390---Linen
+
 Group 6's CS 390 Final Project Repository for designing and building a Mini Programming Language Interpreter.
 
 ---
 
-# Lexer 
-
-### Overview
+## Lexer Overview
 
 `lexer.py` converts Linen source code into a list of `Token` objects printed to the terminal. It handles keywords, identifiers, integer and float literals, string literals, operators, delimiters, and reports lexical errors with line/column information.
 
@@ -37,7 +36,7 @@ py lexer.py test1.ln
 
 **3. Produces:**
 
-```
+```linen
 Token(LET, 'let', line=1, col=1)
 Token(IDENTIFIER, 'x', line=1, col=5)
 Token(COLON, ':', line=1, col=6)
@@ -66,9 +65,7 @@ Each line shows the token type, the raw text that produced it, and its line/colu
 
 ---
 
-# Parser
-
-### Overview
+## Parser Overview
 
 `parser.py` converts the tokens produced by `lexer.py` into an Abstract Syntax Tree (AST), printed to the terminal. It handles variable declarations, assignments, print statements, arithmetic and boolean expressions, parenthesized expressions, `if/else`, and `while` loops. Syntax errors are reported with line/column information.
 
@@ -98,7 +95,7 @@ py parser.py test1.ln
 
 **3. Produces:**
 
-```
+```linen
 ProgramNode([VarDeclNode(x, int, BinaryOpNode(NumberNode(2), TokenType.PLUS, BinaryOpNode(NumberNode(3), TokenType.STAR, NumberNode(4))))])
 ```
 
@@ -107,7 +104,7 @@ which confirms that multiplication binds tighter than addition.
 
 **4. Expanded View of AST:**
 
-```
+```linen
 ProgramNode
   VarDeclNode(x, int)
     BinaryOpNode(PLUS)
@@ -120,18 +117,18 @@ ProgramNode
 This is a sample view of the `let x: int = 2 + 3 * 4;` AST as an indented tree, instead of a collapsed single line.
 
 ### Example - Syntax Error
+
 If a program contains a syntax error, the parser prints a message and exits with status 1:
 
-```
+```parser
 [Syntax Error] line 1, col 9: Expected an expression, got SEMICOLON (';')
 ```
+
 No AST is printed in this case.
 
 ---
 
-# Interpreter
-
-### Overview
+## Interpreter Overview
 
 `interpreter.py` walks the AST produced by `parser.py` and executes the program, printing output to the terminal. It maintains variables in a scoped environment (symbol table), evaluates arithmetic and boolean expressions with correct precedence, executes `if/else`, `while`, `for-in`, and function definitions/calls, and reports runtime errors with line/column information.
 
@@ -144,11 +141,13 @@ From the directory containing `main.py`, `parser.py`, `lexer.py`, `ast_nodes.py`
 ```bash
 py main.py test1.linen
 ```
+
 This executes the program and prints any `print(...)` output to the terminal. If the program contains a lexical, syntax, or runtime error, the interpreter prints an error message instead and halts.
 
 Linen source files use the `.linen` extension. The extension is not inspected by the interpreter; `main.py` reads whatever path is given.
 
 ### Environment / Symbol Table
+
 Variables are stored in an `Environment`, which is a single lexical scope containing a dictionary of names to values plus a link to its parent scope.
 
 - `define(name, value)` introduces a new variable in the current scope (used by `let` and function parameter binding).
@@ -179,7 +178,7 @@ py main.py arithmetic.linen
 
 **3. Produces:**
 
-```
+```linen
 15
 5
 50
@@ -209,11 +208,12 @@ py main.py if_else.linen
 
 **3. Produces:**
 
-```
+```linen
 1
 ```
 
 ### Example - While Loop
+
 **1. Given a file `while_loop.linen` containing:**
 
 ```linen
@@ -233,7 +233,7 @@ py main.py while_loop.linen
 
 **3. Produces:**
 
-```
+```linen
 1
 2
 3
@@ -260,7 +260,7 @@ py main.py runtime_error.linen
 
 **3. Produces:**
 
-```
+```linen
 [Runtime Error] line 4, col 11: Division by zero
 ```
 
