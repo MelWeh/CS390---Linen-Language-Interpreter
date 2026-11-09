@@ -258,7 +258,11 @@ class Lexer:
             self.advance(); self.advance()
             return Token(TokenType.ARROW, "->", line, col)
 
-        # Change: Strict fallback assertions for isolated single bitwise operators.
+        # No comments: reject `//` with a clear message instead of two SLASH tokens.
+        if ch == "/" and nxt == "/":
+            raise LexicalError("Comments ('//') are not supported in Linen", line, col)
+
+        # Strict fallback assertions for isolated single bitwise operators.
         if ch == "&":
             raise LexicalError("Invalid character '&'. Did you mean '&&'?", line, col)
         if ch == "|":
@@ -320,6 +324,9 @@ class Lexer:
             self.advance()
             return Token(TokenType.COLON, ":", line, col)
 
+        # Anything else is not part of the Linen alphabet.
+        raise LexicalError(f"Unexpected character {ch!r}", line, col)
+
     def tokenize(self) -> list[Token]:
         """Processes the entire source string and returns a list of discovered tokens."""
         tokens = []
@@ -329,3 +336,18 @@ class Lexer:
             if tok.type == TokenType.EOF:
                 break
         return tokens
+
+if __name__ == "__main__":
+    import sys
+    from pathlib import Path
+
+    if len(sys.argv) != 2:
+        print("Usage: python3 lexer.py <source_file>")
+        sys.exit(1)
+
+    try:
+        for tok in Lexer(Path(sys.argv[1]).read_text(encoding="utf-8")).tokenize():
+            print(tok)
+    except LexicalError as e:
+        print(e)
+        sys.exit(1)
