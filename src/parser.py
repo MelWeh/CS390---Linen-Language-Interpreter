@@ -153,7 +153,10 @@ class Parser:
         cond = self.expression()
         self.expect(TokenType.RPAREN, "Expected ')' after if condition")
         then = self.block()
-        otherwise = self.block() if self.match(TokenType.ELSE) else None
+        otherwise = None
+        if self.match(TokenType.ELSE):
+            # `else if (...) { }` chains: the else branch is a nested if.
+            otherwise = self.if_stmt() if self.check(TokenType.IF) else self.block()
         return IfNode(cond, then, otherwise)
 
     def while_stmt(self) -> WhileNode:
@@ -273,7 +276,7 @@ class Parser:
         # Booleans
         if tok.type in (TokenType.TRUE, TokenType.FALSE):
             self.advance()
-            return BooleanNode(tok.type == TokenType.TRUE)
+            return BooleanNode(tok.type == TokenType.TRUE, tok.line, tok.column)
 
         # Identifiers (variables or function calls)
         if tok.type == TokenType.IDENTIFIER:
