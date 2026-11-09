@@ -101,8 +101,10 @@ class StringNode(ASTNode):
         return f"StringNode({self.value})"
 
 class BooleanNode(ASTNode):
-    def __init__(self, value):
+    def __init__(self, value, line=None, column=None):
         self.value = value
+        self.line = line
+        self.column = column
     def __repr__(self):
         return f"BooleanNode({self.value})"
 
