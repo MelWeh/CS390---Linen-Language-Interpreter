@@ -25,6 +25,7 @@ class Environment:
     def __init__(self, parent: "Environment" = None):
         self.parent: Optional[Environment] = parent
         self.values: Dict[str, Any] = {}
+        self.types: Dict[str, Optional[str]] = {}   # declared static type per name
 
     # ------------------------------------------------------------------
     # Scope management
@@ -36,9 +37,19 @@ class Environment:
     # ------------------------------------------------------------------
     # Variable operations
     # ------------------------------------------------------------------
-    def define(self, name: str, value: Any) -> None:
-        """Introduce a new variable into the current scope."""
+    def define(self, name: str, value: Any, ty: Optional[str] = None) -> None:
+        """Introduce a new variable into the current scope, recording its declared type."""
         self.values[name] = value
+        self.types[name] = ty
+
+    def type_of(self, name: str) -> Optional[str]:
+        """Return the declared type of the nearest binding of `name` (None if untyped)."""
+        env = self
+        while env is not None:
+            if name in env.values:
+                return env.types.get(name)
+            env = env.parent
+        return None
 
     def assign(self, name: str, value: Any, line: int = None, column: int = None) -> None:
         """Update an existing variable, searching outward through the chain."""
