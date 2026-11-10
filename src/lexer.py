@@ -114,6 +114,17 @@ KEYWORDS = {
 }
 
 
+# Character classes: Linen identifiers and numbers use ASCII only.
+def is_digit(ch: str) -> bool:
+    return "0" <= ch <= "9"
+
+def is_ident_start(ch: str) -> bool:
+    return ("a" <= ch <= "z") or ("A" <= ch <= "Z") or ch == "_"
+
+def is_ident_char(ch: str) -> bool:
+    return is_ident_start(ch) or is_digit(ch)
+
+
 # ======================================================================
 # SECTION 2: LEXER IMPLEMENTATION
 # ======================================================================
@@ -162,7 +173,7 @@ class Lexer:
         start_pos = self.pos
         has_dot = False
 
-        while self.current_char() is not None and (self.current_char().isdigit() or self.current_char() == "."):
+        while self.current_char() is not None and (is_digit(self.current_char()) or self.current_char() == "."):
             if self.current_char() == ".":
                 if has_dot:
                     raise LexicalError("Invalid number with multiple dots", self.line, self.col)
@@ -187,7 +198,7 @@ class Lexer:
         start_line, start_col = self.line, self.col
         start_pos = self.pos
 
-        while self.current_char() is not None and (self.current_char().isalnum() or self.current_char() == "_"):
+        while self.current_char() is not None and is_ident_char(self.current_char()):
             self.advance()
 
         ident = self.source[start_pos:self.pos]
@@ -221,11 +232,11 @@ class Lexer:
             return Token(TokenType.EOF, "", self.line, self.col)
 
         # Numbers
-        if ch.isdigit():
+        if is_digit(ch):
             return self.lex_number()
 
         # Identifiers / keywords
-        if ch.isalpha() or ch == "_":
+        if is_ident_start(ch):
             return self.lex_identifier_or_keyword()
 
         # Strings
@@ -258,7 +269,7 @@ class Lexer:
             self.advance(); self.advance()
             return Token(TokenType.ARROW, "->", line, col)
 
-        # No comments: reject `//` with a clear message instead of two SLASH tokens.
+        # Linen has no comments: reject `//` with a clear message instead of two SLASH tokens.
         if ch == "/" and nxt == "/":
             raise LexicalError("Comments ('//') are not supported in Linen", line, col)
 
