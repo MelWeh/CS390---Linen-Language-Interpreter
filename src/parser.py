@@ -284,16 +284,17 @@ class Parser:
 
             # Function call: foo(x, y)
             if self.match(TokenType.LPAREN):
-                args = []
-                if not self.check(TokenType.RPAREN):
-                    args.append(self.expression())
-                    while self.match(TokenType.COMMA):
-                        args.append(self.expression())
-                self.expect(TokenType.RPAREN, "Expected ')' after function call")
-                return FuncCallNode(ident.value, args, ident.line, ident.column)
+                return FuncCallNode(ident.value, self.call_args(), ident.line, ident.column)
 
             # Variable reference
             return VariableNode(ident.value, ident.line, ident.column)
+
+        # Type conversion: int(x), float(x), string(x), bool(x)
+        if tok.type in (TokenType.TYPE_INT, TokenType.TYPE_FLOAT,
+                        TokenType.TYPE_BOOL, TokenType.TYPE_STRING) and self.peek_type() == TokenType.LPAREN:
+            self.advance()
+            self.advance()
+            return FuncCallNode(tok.value, self.call_args(), tok.line, tok.column)
 
         # Parenthesized expression
         if tok.type == TokenType.LPAREN:
@@ -315,7 +316,15 @@ class Parser:
             tok.line, tok.column,
         )
 
-
+    def call_args(self) -> list:
+        """Parse `[ expression { "," expression } ] ")"` after a call's '('."""
+        args = []
+        if not self.check(TokenType.RPAREN):
+            args.append(self.expression())
+            while self.match(TokenType.COMMA):
+                args.append(self.expression())
+        self.expect(TokenType.RPAREN, "Expected ')' after function call")
+        return args
 
 
 # ======================================================================
