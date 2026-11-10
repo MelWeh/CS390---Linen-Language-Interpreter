@@ -1,5 +1,5 @@
 """
-Environment for the Linen interpreter.
+Tree-walking interpreter for the Linen language.
 """
 
 from typing import Any, List, Union
@@ -20,6 +20,38 @@ class _Break(Exception): pass
 class _Continue(Exception): pass
 
 
+# Type conversion built-ins.
+def _to_int(value):
+    if isinstance(value, bool):
+        raise RuntimeError_("Cannot convert bool to int")
+    if isinstance(value, (int, float)):
+        return int(value)                      # floats are truncated toward zero
+    try:
+        return int(value.strip())
+    except ValueError:
+        raise RuntimeError_(f"Cannot convert \"{value}\" to int")
+
+def _to_float(value):
+    if isinstance(value, bool):
+        raise RuntimeError_("Cannot convert bool to float")
+    if isinstance(value, (int, float)):
+        return float(value)
+    try:
+        return float(value.strip())
+    except ValueError:
+        raise RuntimeError_(f"Cannot convert \"{value}\" to float")
+
+def _to_string(value):
+    return str(value).lower() if isinstance(value, bool) else str(value)
+
+def _to_bool(value):
+    if isinstance(value, bool):
+        return value
+    if value in ("true", "false"):
+        return value == "true"
+    raise RuntimeError_(f"Cannot convert {value!r} to bool")
+
+
 class Interpreter:
     def __init__(self):
         self.global_env = Environment()
@@ -33,12 +65,18 @@ class Interpreter:
             "input",
             lambda prompt="": input(prompt),
         )
+        # Type conversion functions: int(x), float(x), string(x), bool(x)
+        self.global_env.define("int", _to_int)
+        self.global_env.define("float", _to_float)
+        self.global_env.define("string", _to_string)
+        self.global_env.define("bool", _to_bool)
 
     def interpret(self, program: ProgramNode) -> None:
         """Main entry point to execute a parsed program."""
         try:
             for stmt in program.stmts:
                 self.execute(stmt, self.global_env)
+            return True
         # Handle top-level control-flow signals as runtime errors.
         except _Return:
             print(RuntimeError_("'return' outside of function"))
@@ -48,13 +86,16 @@ class Interpreter:
             print(RuntimeError_("'continue' outside of loop"))
         except RuntimeError_ as e:
             print(e)
+        except RecursionError:
+            print(RuntimeError_("Maximum recursion depth exceeded"))
+        return False
 
     def execute(self, node: ASTNode, env: Environment) -> None:
         """Executes a statement node (does not return a value)."""
         if isinstance(node, VarDeclNode):
             val = self.evaluate(node.value, env)
-            self._validate_type(node.ty, val, node.value)
-            env.define(node.name, val)
+            val = self._validate_type(node.ty, val, node.value)
+            env.define(node.name, val, node.ty)
 
         elif isinstance(node, AssignmentNode):
             line, col = self._get_coords(node.value)
@@ -63,6 +104,8 @@ class Interpreter:
                 raise RuntimeError_(f"Undefined variable '{node.name}'", line, col)
 
             val = self.evaluate(node.value, env)
+            if env.type_of(node.name) is not None:
+                val = self._validate_type(env.type_of(node.name), val, node.value)
             env.assign(node.name, val, line, col)
 
         elif isinstance(node, PrintNode):
@@ -155,7 +198,12 @@ class Interpreter:
             args = [self.evaluate(a, env) for a in node.args]
             if callable(target):
                 # builtin like range() / input()
-                return target(*args)
+                try:
+                    return target(*args)
+                except RuntimeError_ as e:
+                    raise RuntimeError_(e.message, node.line, node.column)
+                except (TypeError, ValueError):
+                    raise RuntimeError_(f"Invalid arguments to '{node.name}'", node.line, node.column)
             if isinstance(target, tuple) and len(target) == 2:
                 # user-defined: (FuncDefNode, defining_env)
                 defn, closure = target
@@ -176,21 +224,25 @@ class Interpreter:
 
         elif isinstance(node, BinaryOpNode):
             left_val = self.evaluate(node.left, env)
-            right_val = self.evaluate(node.right, env)
             line, col = self._get_coords(node.right)
 
-            # Logical Operator
-            if node.op_type == TokenType.AND_OP:
-                if not isinstance(left_val, bool) or not isinstance(right_val, bool):
-                    raise RuntimeError_("Operator '&&' requires boolean operands", line, col)
-                return left_val and right_val
+            # Logical Operator (short-circuit: the right side is only evaluated if needed)
+            if node.op_type in (TokenType.AND_OP, TokenType.OR_OP):
+                symbol = "&&" if node.op_type == TokenType.AND_OP else "||"
+                if not isinstance(left_val, bool):
+                    raise RuntimeError_(f"Operator '{symbol}' requires boolean operands", line, col)
+                if left_val == (node.op_type == TokenType.OR_OP):
+                    return left_val
+                right_val = self.evaluate(node.right, env)
+                if not isinstance(right_val, bool):
+                    raise RuntimeError_(f"Operator '{symbol}' requires boolean operands", line, col)
+                return right_val
 
-            if node.op_type == TokenType.OR_OP:
-                if not isinstance(left_val, bool) or not isinstance(right_val, bool):
-                    raise RuntimeError_("Operator '||' requires boolean operands", line, col)
-                return left_val or right_val
+            right_val = self.evaluate(node.right, env)
 
-            # Equality Operators
+            # Equality Operators (bool is never equal to a number, although Python treats True as 1)
+            if node.op_type in (TokenType.EQUALS, TokenType.NOT_EQUALS) and isinstance(left_val, bool) != isinstance(right_val, bool):
+                raise RuntimeError_(f"Cannot compare {type(left_val).__name__} and {type(right_val).__name__}", line, col)
             if node.op_type == TokenType.EQUALS:     return left_val == right_val
             if node.op_type == TokenType.NOT_EQUALS: return left_val != right_val
 
@@ -201,6 +253,10 @@ class Interpreter:
             # Guard against using arithmetic operators with boolean values.
             if isinstance(left_val, bool) or isinstance(right_val, bool):
                 raise RuntimeError_("Arithmetic operators cannot be used with boolean values", line, col)
+
+            # Strings only support + (concatenation) and comparisons.
+            if isinstance(left_val, str) and node.op_type in (TokenType.MINUS, TokenType.STAR, TokenType.SLASH, TokenType.MODULO):
+                raise RuntimeError_("Only '+' and comparisons can be used with strings", line, col)
 
             # Arithmetic
             if node.op_type == TokenType.PLUS:   return left_val + right_val
@@ -233,16 +289,19 @@ class Interpreter:
 
         call_env = closure.child()
         for (pname, ptype), arg in zip(defn.params, args):
-            self._validate_type(ptype, arg, call_node)
-            call_env.define(pname, arg)
+            arg = self._validate_type(ptype, arg, call_node)
+            call_env.define(pname, arg, ptype)
 
         try:
             for stmt in defn.body.stmts:
                 self.execute(stmt, call_env)
         except _Return as r:
             if defn.return_type is not None:
-                self._validate_type(defn.return_type, r.value, call_node)
+                return self._validate_type(defn.return_type, r.value, call_node)
             return r.value
+        # break/continue must not escape a function into the caller's loop.
+        except (_Break, _Continue):
+            raise RuntimeError_(f"'break'/'continue' outside of loop in function '{defn.name}'", call_node.line, call_node.column)
 
         if defn.return_type is not None:
             raise RuntimeError_(f"Function '{defn.name}' expected a return value", call_node.line, call_node.column)
@@ -260,7 +319,7 @@ class Interpreter:
             return self._get_coords(node.operand)
         return None, None
 
-    def _validate_type(self, expected_type: str, value: Any, value_node: ASTNode) -> None:
+    def _validate_type(self, expected_type: str, value: Any, value_node: ASTNode) -> Any:
         """Type verification to satisfy the explicit assignment declarations."""
         line, col = self._get_coords(value_node)
         mapping = {"int": int, "float": float, "bool": bool, "string": str}
@@ -272,5 +331,6 @@ class Interpreter:
             if not isinstance(value, mapping[expected_type]):
                 # Allow promotion of ints to float implicitly if acceptable
                 if expected_type == "float" and isinstance(value, int):
-                    return
+                    return float(value)
                 raise RuntimeError_(f"Type mismatch: Expected '{expected_type}', got value of type '{type(value).__name__}'", line, col)
+        return value
