@@ -181,3 +181,11 @@ ProgramNode
 ```
 
 **Interpretation:** Both `-5` and `not x` are represented by `UnaryOpNode`, with the operand stored as a child node — a `NumberNode` for the literal and a `VariableNode` for the identifier.
+
+**Note:** This program parses correctly but fails if it is run, because `not` requires a `bool` and `x` is an `int`:
+
+```linen
+[Runtime Error] line 2, col 11: Unary '!'/'not' operator requires a boolean value
+```
+
+The parser checks only structure; types are checked by the interpreter at runtime.

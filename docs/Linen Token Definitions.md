@@ -44,7 +44,10 @@ than to `IDENTIFIER`.
 |-----------------|---------------------------------------------------------------------------|------------------|
 | `NUMBER`        | Integer (`10`) or decimal (`3.14`) numeric literal                        | `int` or `float` |
 | `STRING`        | Text enclosed in double quotes, e.g. `"Hello"`                            | the string value |
-| `IDENTIFIER`    | A name starting with a letter or `_`, followed by letters, digits, or `_` | —                |
+| `IDENTIFIER`    | ASCII letter or `_`, followed by ASCII letters, digits, or `_`            | —                |
+
+**Note:** non-ASCII letters (such as `é`) and `//` are not valid Linen
+characters; the lexer reports them as a `LexicalError`. Linen has no comments.
 
 **Note:** integers and floats both emit `NUMBER`. The parsed value is stored in
 `token.literal` so downstream stages can distinguish `int` from `float`.

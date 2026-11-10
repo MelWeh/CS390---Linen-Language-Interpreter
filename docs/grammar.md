@@ -39,7 +39,7 @@ through `Z`.
 ## 1. Lexical Rules
 
 ```ebnf
-letter         ::= "a" | ... | "z" | "A" | ... | "Z" ;
+letter         ::= "a" | ... | "z" | "A" | ... | "Z" ;   (* ASCII only *)
 digit          ::= "0" | ... | "9" ;
 number         ::= digit { digit } [ "." digit { digit } ] ;
 identifier     ::= ( letter | "_" ) { letter | digit | "_" } ;
@@ -98,7 +98,7 @@ call_stmt      ::= func_call ";" ;
 var_decl       ::= "let" identifier ":" type "=" expression ";" ;
 assignment     ::= identifier "=" expression ";" ;
 print_stmt     ::= "print" "(" expression ")" ";" ;
-if_stmt        ::= "if" "(" expression ")" block [ "else" block ] ;
+if_stmt        ::= "if" "(" expression ")" block [ "else" ( block | if_stmt ) ] ;
 while_stmt     ::= "while" "(" expression ")" block ;
 for_stmt       ::= "for" identifier "in" expression block ;
 func_def       ::= "func" identifier "(" param_list ")" [ "->" type ] block ;
@@ -116,17 +116,19 @@ logic_and      ::= equality  { ( "&&" | "and" ) equality } ;
 equality       ::= relational { ( "==" | "!=" ) relational } ;
 relational     ::= additive  { ( "<" | ">" | "<=" | ">=" ) additive } ;
 additive       ::= term      { ( "+" | "-" ) term } ;
-term           ::= factor    { ( "*" | "/" | "%" ) factor } ;
+term           ::= unary     { ( "*" | "/" | "%" ) unary } ;
 unary          ::= ( "-" | "!" | "not" ) unary | factor ;
 factor         ::= number
                  | boolean
                  | string_literal
                  | identifier
                  | func_call
+                 | conversion
                  | "(" expression ")"
                  ;
 
 func_call      ::= identifier "(" [ expression { "," expression } ] ")" ;
+conversion     ::= type "(" expression ")" ;
 
 type           ::= "int" | "float" | "bool" | "string" ;
 ```
@@ -141,5 +143,13 @@ type           ::= "int" | "float" | "bool" | "string" ;
   (e.g., `x is int`). A production will be added when the feature lands.
 - `and`, `or`, `not` are keyword aliases for `&&`, `||`, `!` and may appear
   anywhere the symbolic form is allowed.
+- `else if (...)` is parsed as an `else` whose body is another `if_stmt`, so
+  chains of any length need no extra keyword.
+- Linen has no comment syntax. `//` is rejected by the lexer with a
+  lexical error.
+- Identifiers and numbers are ASCII only: a letter such as `é` is a lexical
+  error.
+- `conversion` reuses the type keywords as built-in functions:
+  `int(x)`, `float(x)`, `string(x)`, `bool(x)`.
 - `range` is **not** a keyword — it is treated as a normal identifier and
   resolves at runtime.

@@ -38,6 +38,7 @@ Linen is a statically typed, imperative programming language with a clean, reada
 - `*` — Multiplication
 - `%` — Modulo
 - `==` — Equals to
+- `!=` — Not equal to
 - `<` — Less than
 - `>` — Greater than
 - `<=` — Less than or equal
@@ -45,6 +46,7 @@ Linen is a statically typed, imperative programming language with a clean, reada
 - `&&` — AND (Logic)
 - `||` — OR
 - `!` — NOT
+- `and`, `or`, `not` — keyword aliases for `&&`, `||`, `!`
 
 **Delimiters:**
 
@@ -98,6 +100,18 @@ if (x < y) {
     print(x);
 } else {
     print(y);
+}
+```
+
+### else if
+
+```linen
+if (score >= 90) {
+    print("A");
+} else if (score >= 80) {
+    print("B");
+} else {
+    print("C");
 }
 ```
 
@@ -222,18 +236,24 @@ if (isLarge == true) {
 
 ## 8. Extension Features
 
-- Input recognition
-- Print
-- Transforming data types from one form to another
+- User input with `input(prompt)`
+- Type conversion with `int(x)`, `float(x)`, `string(x)` and `bool(x)`
 - Statically typed functions with explicit return types and typed parameters
-- `for-in` loops over ranges
+- `for-in` loops over ranges and strings, with `break` and `continue`
 - `string` type and string literals
+
+Type conversion example:
+
+```linen
+let age: int = int(input("Age: "));
+print("Next year: " + string(age + 1));
+```
 
 ---
 
 ## 9. Grammar Reference
 
 The formal BNF/EBNF grammar for Linen is maintained in
-[`GRAMMAR.md`](./GRAMMAR.md).
+[`grammar.md`](./grammar.md).
 
 ---
