@@ -1,0 +1,10 @@
+print(42);
+print(3.14);
+print(true);
+print(false);
+print("Hello, Linen!");
+let n: int = 6;
+print(n * 7);
+print("n is " + "six");
+print(n > 5);
+print(range(0, 4));

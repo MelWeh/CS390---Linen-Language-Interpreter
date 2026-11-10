@@ -1,0 +1,36 @@
+let x: int = 10;
+let counter: int = 0;
+
+func shadow() {
+    let x: int = 99;
+    print(x);
+}
+func bump() {
+    counter = counter + 1;
+}
+shadow();
+print(x);
+bump();
+bump();
+bump();
+print(counter);
+
+{
+    let x: int = 5;
+    print(x);
+}
+print(x);
+
+let base: int = 100;
+func add_base(n: int) -> int {
+    return n + base;
+}
+base = 200;
+print(add_base(1));
+
+func param_scope(x: int) -> int {
+    x = x * 2;
+    return x;
+}
+print(param_scope(4));
+print(x);

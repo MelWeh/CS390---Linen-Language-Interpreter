@@ -1,0 +1,2 @@
+3
+[Runtime Error] line 3, col 9: Type mismatch: Expected 'int', got value of type 'str'

@@ -1,0 +1,12 @@
+let a: int = 5;
+let b: int = 8;
+print(a < b);
+print(a > b);
+print(a <= 5);
+print(b >= 9);
+print(a == 5);
+print(a != b);
+print(2 == 2.0);
+print("apple" < "banana");
+print("linen" == "linen");
+print(true != false);

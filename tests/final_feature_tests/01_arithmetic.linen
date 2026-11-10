@@ -1,0 +1,13 @@
+let a: int = 17;
+let b: int = 5;
+print(a + b);
+print(a - b);
+print(a * b);
+print(a / b);
+print(a % b);
+let x: float = 7.5;
+let y: float = 2.5;
+print(x + y);
+print(x / y);
+print(a / 2.0);
+print(-a + 3);

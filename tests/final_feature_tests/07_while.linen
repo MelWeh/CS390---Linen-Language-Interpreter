@@ -1,0 +1,31 @@
+let i: int = 1;
+let sum: int = 0;
+while (i <= 10) {
+    sum = sum + i;
+    i = i + 1;
+}
+print(sum);
+
+let n: int = 27;
+let steps: int = 0;
+while (n != 1) {
+    if (n % 2 == 0) {
+        n = n / 2;
+    } else {
+        n = 3 * n + 1;
+    }
+    steps = steps + 1;
+}
+print(steps);
+
+let row: int = 1;
+while (row <= 3) {
+    let col: int = 1;
+    let line: string = "";
+    while (col <= row) {
+        line = line + "*";
+        col = col + 1;
+    }
+    print(line);
+    row = row + 1;
+}

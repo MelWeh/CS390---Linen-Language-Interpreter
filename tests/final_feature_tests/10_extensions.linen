@@ -1,0 +1,32 @@
+let name: string = input("Name: ");
+let age: int = int(input("Age: "));
+print("Hello, " + name + "! Next year you will be " + string(age + 1) + ".");
+print(float("2.5") * 4);
+print(int(9.99));
+
+let total: int = 0;
+for i in range(1, 6) {
+    total = total + i;
+}
+print(total);
+
+for i in range(10, 0, -3) {
+    print(i);
+}
+
+let skipped: int = 0;
+for i in range(0, 10) {
+    if (i == 5) { continue; }
+    if (i == 8) { break; }
+    skipped = skipped + i;
+}
+print(skipped);
+
+func reverse(s: string) -> string {
+    let out: string = "";
+    for ch in s {
+        out = ch + out;
+    }
+    return out;
+}
+print(reverse("linen"));

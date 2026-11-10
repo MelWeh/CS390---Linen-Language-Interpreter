@@ -1,0 +1,2 @@
+print(1);
+let total: int = 4 @ 2;

@@ -1,0 +1,14 @@
+let count: int = 1;
+let ratio: float = 0.5;
+let done: bool = false;
+let label: string = "items";
+count = count + 9;
+ratio = ratio * 3;
+done = !done;
+label = "total " + label;
+print(count);
+print(ratio);
+print(done);
+print(label);
+let widened: float = 4;
+print(widened);

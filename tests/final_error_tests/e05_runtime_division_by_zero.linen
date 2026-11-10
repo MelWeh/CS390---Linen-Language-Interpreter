@@ -1,0 +1,5 @@
+let a: int = 10;
+let b: int = 0;
+print(a);
+print(a / b);
+print("never printed");
