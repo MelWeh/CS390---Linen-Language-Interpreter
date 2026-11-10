@@ -22,11 +22,12 @@ Group 6's CS 390 Final Project Repository for designing and building a Mini Prog
 - **Statically typed variables** --- declared with `let` and an explicit type (`int`, `float`, `bool`, `string`)
 - **Arithmetic** --- `+`, `-`, `*`, `/`, `%` with correct operator precedence
 - **Boolean logic** --- `&&`/`and`, `||`/`or`, `!`/`not`, plus comparisons (`==`, `!=`, `<`, `>`, `<=`, `>=`)
-- **Conditionals** --- `if` / `else`
+- **Conditionals** --- `if` / `else` / `else if`
 - **Loops** --- `while` and `for-in`
 - **Functions** --- typed parameters, optional `->` return type, `return` statements, recursion, and closures
 - **Scope** --- lexical scoping with a parent-chain environment; local and global variables; shadowing via `let`
 - **Print** --- `print(expr);` writes to stdout
+- **No comments** --- Linen has no comment syntax; `//` is reported as a lexical error
 
 ### Extension features
 
@@ -35,7 +36,8 @@ Group 6's CS 390 Final Project Repository for designing and building a Mini Prog
 - **`break` / `continue`** --- early loop exit and skip-to-next-iteration
 - **User input** --- `input(prompt)` reads a line from stdin
 - **Statically typed functions** --- parameter and return types checked at call time
-- **Built-ins** --- `range(...)` and `input(...)` available in the global scope
+- **Type conversion** --- `int(x)`, `float(x)`, `string(x)`, `bool(x)`
+- **Built-ins** --- `range(...)`, `input(...)` and the conversion functions available in the global scope
 
 ## Installation / Setup Requirements
 
@@ -103,7 +105,6 @@ More sample programs are documented in `docs/architecture.md` (the full language
     |-- interpreter.py                  Tree-walking interpreter
     |-- environment.py                  Scope / symbol table (Environment + RuntimeError_)
     |
-    |
     |-- docs/
     |   |-- architecture.md             Full interpreter architecture and reference
     |   |-- grammar.md                  Formal BNF/EBNF grammar for Linen
@@ -113,6 +114,8 @@ More sample programs are documented in `docs/architecture.md` (the full language
     |
     |-- tests/
     |   |-- extend_tests                Test cases for the extension features
+    |   |-- final_error_tests           Final submission: 8 intentional-error programs + expected output
+    |   |-- final_feature_tests         Final submission: 10 feature programs + expected output
     |   |-- interpreter_tests           Test cases for the interpreter
     |   |-- lexer_tests                 Test cases for the lexer
     |   |-- parser_tests                Test cases for the parser
