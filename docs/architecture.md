@@ -154,6 +154,7 @@ Variables are stored in an Environment, which is a single lexical scope containi
 - define(name, value) introduces a new variable in the current scope (used by let and function parameter binding).
 - assign(name, value) updates an existing variable, searching outward through the parent chain (used by =).
 - lookup(name) reads a variable, searching outward.
+- Each binding also records its declared type (types dict). Assignment looks up that type with type_of(name) and rejects a value of the wrong type, so `let x: int` stays an int for its whole lifetime.
 
 New scopes are created for every block, every if branch, every loop iteration, and every function call. Lookup walks inner -> outer, so a name resolves to the nearest enclosing scope that defines it. Assigning to a name that was never declared raises a runtime error.
 
@@ -277,7 +278,7 @@ Linen supports user-defined functions with typed parameters and an optional retu
 
 ```linen
 func name(param1: type, param2: type) -> return_type {
-    // body
+
     return value;
 }
 ```
@@ -301,8 +302,8 @@ func greet(name: string) {
 }
 
 let x: int = add(3, 4);
-print(x);          // 7
-greet("Linen");    // Hello, Linen
+print(x);
+greet("Linen");
 ```
 
 ### Implementation
@@ -363,7 +364,7 @@ func bump() {
 
 bump();
 bump();
-print(counter);   // 2
+print(counter);
 ```
 
 bump declares no local counter, so assign walks up to the global scope and updates it.
@@ -378,11 +379,11 @@ Beyond the core language, Linen implements the following extension features:
 
 ```linen
 for i in range(0, 5) {
-    print(i);          // 0 1 2 3 4
+    print(i);
 }
 
 for ch in "abc" {
-    print(ch);         // a b c
+    print(ch);
 }
 ```
 
@@ -400,7 +401,7 @@ while (true) {
     if (count % 2 == 0) { continue; }
     total = total + count;
 }
-print(total);   // 25
+print(total);
 ```
 
 Implemented with internal `_Break` / `_Continue` exceptions caught by the loop executor. Used outside a loop, they produce a runtime error.
@@ -409,7 +410,7 @@ Implemented with internal `_Break` / `_Continue` exceptions caught by the loop e
 
 ```linen
 let greeting: string = "Hello, " + "Linen";
-print(greeting);   // Hello, Linen
+print(greeting);
 ```
 
 String literals use double quotes. + concatenates two strings. (Escape sequences are not currently supported.)
@@ -423,13 +424,24 @@ print("Hello, " + name);
 
 input reads a line from stdin and returns it as a string.
 
-### 5. Statically typed functions
+### 5. Type conversion
+
+```linen
+let age: int = int(input("Age: "));
+print("Next year: " + string(age + 1));
+print(int(9.99));
+print(float("2.5") * 4);
+```
+
+The type keywords double as built-in conversion functions. `int` truncates floats and parses strings, `float` widens ints and parses strings, `string` formats any value (`true` becomes `"true"`), and `bool` accepts only `"true"` or `"false"`. Booleans never convert to numbers, and a string that does not parse is a runtime error (`Cannot convert "12a" to int`). The parser recognises a type keyword followed by `(` as a call, and the functions live in the global scope like `range` and `input`.
+
+### 6. Statically typed functions
 
 Explicit parameter types and optional return types, checked at call time (see the Functions section above).
 
 ### Recursion note
 
-Recursion is supported (see test3), but recursion depth is bounded by Python's interpreter stack, since the Linen interpreter is written in Python. Very deep recursion will surface as a Python RecursionError, not a Linen runtime error.
+Recursion is supported (see test3). main.py raises Python's recursion limit so ordinary recursion has room; runaway recursion is caught and reported as a Linen runtime error ("Maximum recursion depth exceeded") instead of crashing the Python process.
 
 ---
 
@@ -596,3 +608,22 @@ Hello, Alice
 ```
 
 ---
+
+## Final Test Suite
+
+The final suite lives in `tests/final_feature_tests/` (10 programs, one per required area) and `tests/final_error_tests/` (8 programs). Each `name.linen` has a `name.out` file with its exact expected output; `10_extensions` also has `10_extensions.in`, which supplies its typed input.
+
+| Feature tests | Covers |
+| --- | --- |
+| 01_arithmetic | + - * / % on int and float, int division, mixed int/float, unary minus |
+| 02_precedence | * over +, left associativity, parentheses, && over \|\|, keyword operators |
+| 03_variables | declarations of all four types, reassignment, int-to-float widening |
+| 04_print | printing every value type and expressions |
+| 05_comparisons | all six comparisons on ints, floats, strings, bools |
+| 06_if_else | if, if/else, else-if chains, nesting, short-circuit && |
+| 07_while | counting and accumulating loops, Collatz, nested loops |
+| 08_functions | parameters, return values, nested calls, void functions, recursion |
+| 09_scope | shadowing, global updates from functions, block scope, lexical lookup |
+| 10_extensions | input(), type conversion, for-in over range (with step) and strings, break, continue |
+
+The error tests cover 2 lexical errors (an invalid character, an unterminated string), 2 syntax errors (a missing `;`, a missing `}`), and 4 runtime errors (division by zero, an undefined variable, a type mismatch on assignment, the wrong number of arguments).
